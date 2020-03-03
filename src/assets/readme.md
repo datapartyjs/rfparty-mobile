@@ -1,0 +1,1 @@
+Assets in the directory will be copied in the `/www` folder when build.

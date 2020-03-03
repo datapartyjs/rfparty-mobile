@@ -1,0 +1,11 @@
+.cache
+.dist
+.vscode
+hooks
+node_modules
+platforms
+plugins
+res
+www
+# OS X
+.DS_Store
