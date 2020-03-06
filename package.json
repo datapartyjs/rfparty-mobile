@@ -16,10 +16,10 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "cordova": "^9.0.0",
+    "eslint": "^6.8.0",
     "parcel": "^1.12.4",
     "parcel-plugin-clean-dist": "0.0.6",
-    "parcel-plugin-static-files-copy": "^2.3.1",
-    "eslint": "^6.8.0"
+    "parcel-plugin-static-files-copy": "^2.3.1"
   },
   "dependencies": {
     "cordova-android": "^8.1.0",
@@ -27,7 +27,7 @@
   },
   "staticFiles": {
     "staticPath": [
-      "assets"
+      "src/assets"
     ],
     "watcherGlob": "**"
   },
