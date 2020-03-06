@@ -2,6 +2,18 @@
 
 Utilisation de ![](https://cordova.apache.org/static/img/cordova_24.png) [Cordova](https://cordova.apache.org/) avec le bundler ![](https://parceljs.org/assets/parcel.png) [ParcelJS](https://parceljs.org/).
 
+## Pré-requis (Windows)
+
+Vous devez avoir au préalable installé [l'environnement de développement d'Android](https://cordova.apache.org/docs/en/latest/guide/platforms/android/index.html#installing-the-requirements) :
+- la JDK 1.8 (voir ici si besoins: https://github.com/AdoptOpenJDK/openjdk8-releases/releases)
+- [Gradle](https://gradle.org/install/)
+- le Android Platform SDK 18 (via Android Studio) ansi que les Android SDK build-tools version 19.1.0 
+
+Dans les variables d'environnement il faut ajouter :
+- `JAVA_HOME` : pointe sur le répertoire de la JDK
+- `ANDROID_HOME` : répertoire du SKD Android (disponible dans l'onglet du SDK manager de Android Studio)
+- dans `PATH` : le chemin des répertoires `tools`, `tools/bin`, and `platform-tools` depuis `ANDROID_HOME`
+
 ## Installation
 
 Récupérer le projet et lancer la commande d'installation des composants.
