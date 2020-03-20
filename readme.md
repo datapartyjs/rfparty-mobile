@@ -4,6 +4,8 @@ Utilisation de ![](https://cordova.apache.org/static/img/cordova_24.png) [Cordov
 
 ## Pré-requis (Windows)
 
+Vous devez avoir installé [NodeJS](https://nodejs.org/) pour la gestion des dépendances.
+
 Vous devez avoir au préalable installé [l'environnement de développement d'Android](https://cordova.apache.org/docs/en/latest/guide/platforms/android/index.html#installing-the-requirements) :
 - la JDK 1.8 (voir ici si besoins: https://github.com/AdoptOpenJDK/openjdk8-releases/releases)
 - [Gradle](https://gradle.org/install/)
