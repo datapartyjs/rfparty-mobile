@@ -1,29 +1,35 @@
-// Run cordova app
-const app = {
-  // Application Constructor
-  initialize: function() {
-    document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
-  },
+import {MainWindow} from './main-window'
 
-  // deviceready Event Handler
-  //
-  // Bind any cordova events here. Common events are:
-  // 'pause', 'resume', etc.
-  onDeviceReady: function() {
-    this.receivedEvent('deviceready');
-  },
+import { RFParty } from './rfparty'
 
-  // Update DOM on a Received Event
-  receivedEvent: function(id) {
-    var parentElement = document.getElementById(id);
-    var listeningElement = parentElement.querySelector('.listening');
-    var receivedElement = parentElement.querySelector('.received');
+const JSONPath = require('jsonpath-plus').JSONPath
 
-    listeningElement.setAttribute('style', 'display:none;');
-    receivedElement.setAttribute('style', 'display:block;');
 
-    console.log('Received Event: ' + id);
+
+window.JSONPath = JSONPath
+window.rfparty = null
+window.RFParty = RFParty
+window.MainWindow = MainWindow
+
+function channelListener(msg) {
+  console.log('[cordova] received:' + msg);
+}
+
+function startupCallback(err) {
+  if (err) {
+      console.log(err);
+  } else {
+      console.log ('Node.js Mobile Engine Started');
+      nodejs.channel.send('Hello from Cordova!');
   }
 };
 
-app.initialize();
+function startNodeProject() {
+  nodejs.channel.setListener(channelListener);
+  nodejs.start('main.js', startupCallback);
+  // To disable the stdout/stderr redirection to the Android logcat:
+  // nodejs.start('main.js', startupCallback, { redirectOutputToLogcat: false });
+};
+
+
+document.addEventListener("deviceready", startNodeProject, false);

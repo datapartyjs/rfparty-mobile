@@ -1,23 +1,112 @@
 <!DOCTYPE html>
+
 <html>
   <head>
     <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
-    <title>Hello World</title>
+    <title>rfparty</title>
+
+    <link rel="stylesheet" href="./node_modules/leaflet/dist/leaflet.css"/>
+
+    <link rel="stylesheet" href="./src/main.css"/>
   </head>
-  <body>
-    <div class="app">
-      <h1>TEST Cordova + Parcel</h1>
-      <div id="deviceready" class="blink">
-        <p class="event listening">Connecting to Device</p>
-        <p class="event received">Device is Ready</p>
+
+  <body onload="MainWindow.onload('map')">
+      <div id='modal-shadow' class='modal-shadow'></div>
+      <div class='header' id='header' >
+        rfparty
       </div>
-    </div>
-    <!-- include script on the fly
-      <script type="text/javascript" src="/cordova.js"></script>
-    -->
-    <script type="text/javascript" src="index.js"></script>
-  </body>
+
+      <div class='search-bar'>
+        <input id='search-input' class='search-input' type="search" placeholder="search" disabled />
+      </div>
+      <span id='search-hint' class='search-hint hidden'></span>
+      <span id='search-status' class='search-status hidden'></span>
+  
+      <div class="status-area">
+        <span id='status-text'>Status</span><span id='status-dot' class='green-dot'></span>
+      </div>
+
+      <div id='center-modal' class="center-modal">
+        <div class="rainbows hidden" id='logo' >rfparty</div>
+      
+        <div id='loading-bar' class='loading-bar hidden'>
+          <center><span>Loading <span id='loading-value'>0</span>%</span></center>
+          <progress id="loading-progress-bar" class='loading-progress-bar' max="100" value="0"></progress>
+          <textarea id='loading-details' class='loading-details' readonly disabled>
+          </textarea>
+        </div>
+      </div>
+
+      <div id="device-info" class='device-info hidden'>
+        <span class="close" onclick="window.MainWindow.hideDiv('device-info')">X</span>
+        <h3 id='device-info-name'>name</h3>
+        <span id='device-info-address'>address</span><br>
+        <span id='device-info-company'>company</span>
+
+        <h4>Services</h4>
+
+        <span id='device-info-services'></span>
+        <span id='device-info-details' class='device-info-details'>
+          <div id='device-info-detailscontainer'></div>
+        </span>
+      </div>
+
+      <div id="map" class="content"></div>
+
+            <!-- The Modal -->
+      <div id="setup-modal" class="modal hidden">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+          <form name="setupForm">
+          <div class="modal-header">
+            <span class="close">&times;</span>
+            <h2>Setup</h2>
+          </div>
+          <div class="modal-body">
+            
+              <p>
+                <labal for="scanDBFile">scan db</labal>
+                <input id="scanDBFile" type="file" name="scanDBFile" accept=".db"/>
+              </p>
+          
+              <p>
+                <labal for="gpxFiles">gpx files</labal>
+                <input id='gpxFiles' type="file" name="gpxFiles[]" accept=".gpx" multiple/>
+              </p>
+
+              <br>
+    
+              <p>
+                <center><button class='setup-submit' type="submit">load</button></center>
+              </p>
+          </div>
+          <div class="modal-footer" onclick='gotoGithub()'>
+            <!-- <h3>About  
+              <a href='https://github.com/datapartyjs/teleop-xyz' target='_'> GitHub</a>
+            </h3> -->
+          </div>
+          </form>
+        </div>
+
+      </div>
+
+      
+
+      <footer class='footer-left'>
+        <span><span class='footer-logo'>rfparty.xyz</span> - <span id='version-text'></span> © 2022 <a href='https://www.dataparty.xyz/'>dataparty llc</a></span>
+
+      </footer>
+
+      <footer class='footer-right'>
+        <small>map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></small>
+      </footer>
+
+      <script type="text/javascript" src="./cordova.js"></script>
+      <script src="src/app.js" type="module"></script>
+
+    </body>
 </html>
