@@ -3,7 +3,7 @@
 
 import { last } from 'lodash'
 
-//const Debug = require('debug')('rfparty')
+const debug = require('debug')('rfparty')
 const Leaflet = require('leaflet')
 const JSON5 = require('json5')
 const Pkg = require('../package.json')
@@ -78,16 +78,18 @@ export class RFParty extends EventEmitter {
     this.showAllTracks = true
     this.showAwayTracks = false
 
+    this.center = null
     this.detailsViewer = null
 
     this.map = Leaflet.map(divId,{
       attributionControl: false
-    }).setView([47.6, -122.35], 13)
+    })
 
     Leaflet.tileLayer(TILE_SERVER_MAPBOX, TILE_SERVER_MAPBOX_CONFIG).addTo(this.map);
     //Leaflet.control.attribution({prefix: '<span id="map-attribution" class="map-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></span>' })
     //  .addTo(this.map)
 
+    debug('rfparty constructor')
 
     this.db = new Loki('session')
 
@@ -134,7 +136,17 @@ export class RFParty extends EventEmitter {
     this.gpxLines = {}
     this.gpxLayer = Leaflet.layerGroup()
     
+    this.autoCenter = true
 
+  }
+
+  indexLocation(location){
+
+    //Update if we don't have a center or accuracy improves and autocenter is turned-on
+    if( !this.center || (this.autoCenter && (this.center.coords.accuracy > location.coords.accuracy)) ){
+      this.center = location
+      this.map.setView([ location.coords.latitude, location.coords.longitude], 13)
+    }
   }
 
   async start() {

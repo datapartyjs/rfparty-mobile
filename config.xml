@@ -1,36 +1,34 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="xyz.dataparty.rfparty" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <name>rfparty</name>
-  <description>
+<widget id="xyz.dataparty.rfparty" version="1.0.1"  xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>rfparty</name>
+    <description>
     A bluetooth tricorder
   </description>
-  <author email="code@dataparty.xyz" href="https://dataparty.xyz">
+    <author email="code@dataparty.xyz" href="https://dataparty.xyz">
     dataparty
   </author>
-  <icon src="config/icon-full.png" />
-  <platform name="android">
-    <icon background="config/icon/android/mipmap-mdpi/ic_launcher_adaptive_back.png" density="mdpi" foreground="config/icon/android/mipmap-mdpi/ic_launcher_adaptive_fore.png" />
-    <icon background="config/icon/android/mipmap-hdpi/ic_launcher_adaptive_back.png" density="hdpi" foreground="config/icon/android/mipmap-hdpi/ic_launcher_adaptive_fore.png" />
-    <icon background="config/icon/android/mipmap-xhdpi/ic_launcher_adaptive_back.png" density="xhdpi" foreground="config/icon/android/mipmap-xhdpi/ic_launcher_adaptive_fore.png" />
-    <icon background="config/icon/android/mipmap-xxhdpi/ic_launcher_adaptive_back.png" density="xxhdpi" foreground="config/icon/android/mipmap-xxhdpi/ic_launcher_adaptive_fore.png" />
-    <icon background="config/icon/android/mipmap-xxxhdpi/ic_launcher_adaptive_back.png" density="xxxhdpi" foreground="config/icon/android/mipmap-xxxhdpi/ic_launcher_adaptive_fore.png" />
-  </platform>
-  <content src="index.html" />
-  <plugin name="cordova-plugin-whitelist" spec="1" />
-  <access origin="*" />
-  <allow-intent href="http://*/*" />
-  <allow-intent href="https://*/*" />
-  <allow-intent href="tel:*" />
-  <allow-intent href="sms:*" />
-  <allow-intent href="mailto:*" />
-  <allow-intent href="geo:*" />
-  <platform name="android">
-    <allow-intent href="market:*" />
-  </platform>
-  <platform name="ios">
-    <allow-intent href="itms:*" />
-    <allow-intent href="itms-apps:*" />
-  </platform>
-  <hook src="scripts/parcel.js" type="before_build" />
-  <hook src="scripts/parcel.js" type="before_run" />
+    <icon src="config/icon-full.png" />
+    <platform name="android">
+        <preference name="android-targetSdkVersion" value="32" />
+        <icon background="config/icon/android/mipmap-mdpi/ic_launcher_adaptive_back.png" density="mdpi" foreground="config/icon/android/mipmap-mdpi/ic_launcher_adaptive_fore.png" />
+        <icon background="config/icon/android/mipmap-hdpi/ic_launcher_adaptive_back.png" density="hdpi" foreground="config/icon/android/mipmap-hdpi/ic_launcher_adaptive_fore.png" />
+        <icon background="config/icon/android/mipmap-xhdpi/ic_launcher_adaptive_back.png" density="xhdpi" foreground="config/icon/android/mipmap-xhdpi/ic_launcher_adaptive_fore.png" />
+        <icon background="config/icon/android/mipmap-xxhdpi/ic_launcher_adaptive_back.png" density="xxhdpi" foreground="config/icon/android/mipmap-xxhdpi/ic_launcher_adaptive_fore.png" />
+        <icon background="config/icon/android/mipmap-xxxhdpi/ic_launcher_adaptive_back.png" density="xxxhdpi" foreground="config/icon/android/mipmap-xxxhdpi/ic_launcher_adaptive_fore.png" />
+        <allow-intent href="market:*" />
+    </platform>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <platform name="ios">
+        <allow-intent href="itms:*" />
+        <allow-intent href="itms-apps:*" />
+    </platform>
+    <hook src="scripts/parcel.js" type="before_build" />
+    <hook src="scripts/parcel.js" type="before_run" />
 </widget>

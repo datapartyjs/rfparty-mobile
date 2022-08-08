@@ -77,6 +77,7 @@ export class LoadingProgress extends EventEmitter {
 
   completePart(name){
     this.steps[name].completedParts++
+    this.emit('progress', this.progress)
   }
 
   completeStep(name, successOrFail=true, message){

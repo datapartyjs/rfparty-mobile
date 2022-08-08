@@ -5,8 +5,31 @@ import { RFParty } from './rfparty'
 import {LoadingProgress} from './loading-progress'
 import { stringify } from 'json5'
 
+import { GapParser } from './gap-parser'
+
+//const debug = require('debug')('MainWindow')
 const moment = require('moment')
 
+function debug(...args){
+  console.log('MainWindow -', ...args)
+}
+
+const byteToHex = [];
+for(let n=0; n<0xff; ++n){
+  const hexOctet = n.toString(16).padStart(2, '0')
+  byteToHex.push(hexOctet)
+}
+
+function hexString(arrayBuffer){
+  const buf = new Uint8Array(arrayBuffer)
+  const hexOctets = [];
+
+  for(let i=0; i<buf.length; i++){
+    hexOctets.push( byteToHex[ buf[i] ] )
+  }
+
+  return hexOctets.join('')
+}
 
 const SearchSuggestions = {
   help: false,
@@ -26,10 +49,30 @@ const SearchSuggestions = {
   error: false
 }
 
+window.advertisements = {}
+window.seen_macs = {}
+
+window.printBle = function (){
+
+
+  for(let mac in window.advertisements){
+    const station = window.advertisements[mac]
+
+    //const buffer = Buffer.from( station.advertising.data, 'base64' )
+    
+    console.log(station)
+
+    const fields = GapParser.parseBase64String( station.advertising.data ) 
+
+    console.log( fields )
+
+    //console.log('\t', buffer.toString('hex'))
+  }
+}
 
 export class MainWindow {
-  static onload(divId) {
-    console.log('RFParty.onload')
+  static async onload(divId) {
+    debug('RFParty.onload')
     window.rfparty = new RFParty(divId)
 
     const form = document.getElementsByName('setupForm')[0]
@@ -39,7 +82,7 @@ export class MainWindow {
     versionText.innerText = 'v' + RFParty.Version
 
 
-    MainWindow.openSetupForm()
+    await MainWindow.startSession()
   }
 
   static hideDiv(divId){ return MainWindow.addRemoveClass(divId, 'add', 'hidden') }
@@ -105,6 +148,12 @@ export class MainWindow {
       document.getElementById('loading-details').value = window.loadingState.toString()
     })
 
+    window.loadingState.on('step-progress', (name)=>{
+      document.getElementById('loading-details').value = window.loadingState.toString()
+      document.getElementById('loading-value').innerText=''+ Math.round(progress*100)
+      document.getElementById('loading-progress-bar').value= progress*100
+    })
+
     window.loadingState.on('step-complete', (name)=>{
       document.getElementById('loading-details').value = window.loadingState.toString()
     })
@@ -130,8 +179,10 @@ export class MainWindow {
   }
 
   static async startSession(event) {
-    event.preventDefault()
-    console.log('startSession')
+    if(event){
+      event.preventDefault()
+    }
+    debug('startSession')
 
 
     MainWindow.closeSetupForm()
@@ -157,7 +208,7 @@ export class MainWindow {
     })*/
 
     //await setupPromise
-    MainWindow.closeLoading()
+    //MainWindow.closeLoading()
   }
 
   static async delay(ms=100){
@@ -166,70 +217,147 @@ export class MainWindow {
     })
   }
 
+  static onLocation(location){
+    debug('location', location)
+
+    window.rfparty.indexLocation(location)
+  }
+
+  static onBleDevice(dev){
+    debug('device', dev)
+
+    navigator.geolocation.getCurrentPosition(MainWindow.onLocation, console.error, {
+      enableHighAccuracy: true,
+      maximumAge: 30000,
+      timeout: 30000
+    })
+
+    if(!window.seen_macs[dev.id]){
+      window.seen_macs[dev.id] = 0
+      window.loadingState.startStep('dev '+dev.id, 100)
+    }
+
+    window.seen_macs[dev.id]++
+    window.advertisements[dev.id] =  { ...dev }
+
+    window.loadingState.completePart('dev '+dev.id)
+  }
+
+  static get Permissions(){
+    return [
+      //cordova.plugins.permissions.ACCESS_BACKGROUND_LOCATION,
+      cordova.plugins.permissions.ACCESS_FINE_LOCATION,
+      //cordova.plugins.permissions.ACCESS_COARSE_LOCATION,
+      //cordova.plugins.permissions.BLUETOOTH_SCAN
+    ]
+  }
+
+  static async hasPermission(perm){
+    return new Promise( (resolve,reject)=>cordova.plugins.permissions.checkPermission(perm, resolve, reject) )
+  }
+
+  static async requestPermissions(perms){
+    debug('requesting permissions', perms)
+    return new Promise( (resolve,reject)=>cordova.plugins.permissions.requestPermissions(perms, resolve, reject) )
+  }
+
+  static async isLocationEnabled(){
+
+    try{ 
+      let geoEA = new Promise((resolve,reject)=>{ble.isLocationEnabled(resolve,reject) })
+      await geoEA
+    }
+    catch(err){ return false }
+
+    return true
+  }
+
+  static async isBleEnabled(){
+    try{ await ble.withPromises.isEnabled() }
+    catch(err){ return false }
+
+    return true
+  }
+
+  static async checkPermissions(){
+    let needs = []
+    for(let perm of MainWindow.Permissions){
+      if(! (await MainWindow.hasPermission(perm)).hasPermission){
+        needs.push( perm )
+      }
+    }
+
+    if(! (await MainWindow.isBleEnabled()) ){
+      debug('enabling BLE programtically')
+      await ble.withPromises.enable()
+    }
+
+
+    debug('needs permissions', needs)
+
+    if(needs.length > 0){
+      let request = await MainWindow.requestPermissions(needs)
+
+      if(!request.hasPermission){
+        debug('permissions request failed')
+      }
+    }
+
+
+    while(! (await MainWindow.isBleEnabled())){
+      debug('prompting user to enable ble')
+      await ble.withPromises.showBluetoothSettings()
+    }
+
+  }
+
+  static async waitForHardware(){
+    while(! (await MainWindow.isLocationEnabled())){
+      debug('waiting for location hw')
+      await MainWindow.delay(500)
+    }
+  }
+
+  static async stopScan(){
+    await new Promise((resolve,reject)=>{ ble.stopScan(resolve,reject) })
+  }
+
+  static scanLoop(){
+    debug('ble - starting scan')
+    ble.startScanWithOptions([],{
+      reportDuplicates: false,
+      scanMode: 'lowLatency',
+      reportDelay: 0
+    }, MainWindow.onBleDevice, console.error)
+
+    setTimeout(async ()=>{
+      debug('ble - stopping scan')
+      await MainWindow.stopScan()
+      MainWindow.scanLoop()
+    }, 15000)
+  }
+
   static async setupSession(){
 
-    const gpxFiles = document.getElementById('gpxFiles')
-
-    //console.log('selected ', gpxFiles.files.length, 'gpx files')
-
-    const locationLoaders = []
-
-    for (let file of gpxFiles.files) {
-      const reader = new FileReader()
-      window.loadingState.startStep('read '+file.name)
-
-      let fileLoad = new Promise((resolve, reject) => {
-        reader.onload = () => {
-          
-          const json = xmljs.xml2js(reader.result, {
-            compact: true,
-            textKey: 'value',
-            nativeType: true,
-            nativeTypeAttributes: true
-          })
-          window.loadingState.completeStep('read '+file.name)
-
-          
-          window.rfparty.addGpx.bind(window.rfparty)(json, file.name).then(resolve).catch(reject)
-          
-        }
-        reader.onabort = reject
-        reader.addEventListener('error', reject)
-      })
-
-      reader.readAsText(file)
-
-      locationLoaders.push(fileLoad)
-    }
+    window.loadingState.startStep('configure permissions')
+    await MainWindow.checkPermissions()
+    window.loadingState.completeStep('configure permissions')
 
 
-    await Promise.all(locationLoaders)
+    window.loadingState.startStep('please enable location')
+    await MainWindow.waitForHardware()
+    window.loadingState.completeStep('please enable location')
 
-    const scanLoaders = []
+    window.loadingState.startStep('configure hardware')
+    MainWindow.scanLoop()
+    navigator.geolocation.watchPosition(MainWindow.onLocation, console.error, {
+      enableHighAccuracy: true,
+      maximumAge: 10000
+    })
+    window.loadingState.completeStep('configure hardware')
 
-    const scanDbFiles = document.getElementById('scanDbFiles')
+    window.loadingState.startStep('configure db')
 
-    for(let file of scanDbFiles.files ) {
-      
-      const scanDbReader = new FileReader()
-
-      let dbLoad = new Promise((resolve, reject) => {
-        window.loadingState.startStep('read '+file.name)
-        scanDbReader.onload = ()=>{
-  
-          window.loadingState.completeStep('read '+file.name)
-          window.rfparty.addScanDb.bind(window.rfparty)(scanDbReader.result, file.name).then(resolve).catch(reject)
-        }
-        scanDbReader.onabort = reject
-        scanDbReader.addEventListener('error', reject)
-      })
-  
-      //console.log('scanDB', file)
-      scanDbReader.readAsText(file)
-      scanLoaders.push(dbLoad)
-    }
-
-    await Promise.all(scanLoaders)
 
     let searchElem = document.getElementById('search-input')
     let searchStatusElem = document.getElementById('search-status')
