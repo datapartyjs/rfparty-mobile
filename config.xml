@@ -9,9 +9,10 @@
   </author>
     <icon src="config/icon-full.png" />
     <platform name="android">
-        <!--<preference name="android-minSdkVersion" value="22" />
-        <preference name="android-compileSdkVersion" value="28" />
-        <preference name="android-targetSdkVersion" value="28" />-->
+        <!--<preference name="android-minSdkVersion" value="22" />-->
+	<!--<preference name="android-buildToolsVersion" value="31" />-->
+        <!--<preference name="android-compileSdkVersion" value="31" />-->
+        <preference name="android-targetSdkVersion" value="31" />
 	<!--<preference name="AndroidXEnabled" value="true" />-->
 	<exclude-files pattern="nodejs-project/node_modules/es5-ext/*" />
 	<exclude-files pattern="nodejs-project/node_modules/es6-iterator/*" />
