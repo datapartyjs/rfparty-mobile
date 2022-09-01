@@ -1,6 +1,6 @@
 // Require the 'cordova-bridge' to enable communications between the
 // Node.js app and the Cordova app.
-const cordova = require('cordova-bridge');
+const cordova = require('cordova-bridge')
 const mkdirp = require('mkdirp')
 //const { identity } = require('lodash')
 const Debug = require('./debug')
@@ -20,7 +20,7 @@ async function main(channel){
 
   try {
     debug.debug('api')
-    const Dataparty = require('@dataparty/api/src/index')
+    const Dataparty = require('@dataparty/api/dist/dataparty.js')
     debug.debug('model')
     const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 

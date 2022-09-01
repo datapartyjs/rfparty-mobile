@@ -9,8 +9,7 @@
   "author": "Dataparty DAO",
   "license": "MIT",
   "dependencies": {
-    "@dataparty/api": "1.2.10",
-    "@dataparty/bouncer-model": "^1.4.3",
+    "@dataparty/api": "datapartyjs/dataparty-api#nodejs-bundle",
     "debug": "^4.3.4",
     "mkdirp": "^1.0.4"
   }

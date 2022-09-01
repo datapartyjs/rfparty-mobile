@@ -10,6 +10,10 @@ import { GapParser } from './gap-parser'
 //const debug = require('debug')('MainWindow')
 const moment = require('moment')
 
+
+const Dataparty = require( '@dataparty/api/src/index-browser' )
+const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
+
 function debug(...args){
   console.log('MainWindow -', ...args)
 }
@@ -71,7 +75,7 @@ window.printBle = function (){
 }
 
 export class MainWindow {
-  static async onload(divId) {
+  static async onload(divId, channel) {
     debug('RFParty.onload')
     window.rfparty = new RFParty(divId)
 
@@ -82,7 +86,7 @@ export class MainWindow {
     versionText.innerText = 'v' + RFParty.Version
 
 
-    await MainWindow.startSession()
+    await MainWindow.setupSession(channel)
   }
 
   static hideDiv(divId){ return MainWindow.addRemoveClass(divId, 'add', 'hidden') }
@@ -337,7 +341,62 @@ export class MainWindow {
     }, 15000)
   }
 
-  static async setupSession(){
+  static async setupDb(channel){
+    let config = new Dataparty.Config.LocalStorageConfig({basePath:'rfparty'})
+
+    let comms = new Dataparty.Comms.LoopbackComms({
+      channel: channel
+    })
+  
+    let peer = new Dataparty.PeerParty({
+      comms: comms,
+      model: BouncerModel,
+      config: config
+    })
+  
+  
+  
+    window.loadingState.startStep('start db thread')
+    console.log('starting nodejs')
+    let nodejsStart = new Promise((resolve, reject)=>{
+      nodejs.start('main.js', (err)=>{
+        if(err){
+          console.log(err)
+          reject(err) }
+        else { resolve() }
+      })
+    })
+  
+    await nodejsStart
+    console.log ('nodejs Mobile Engine Started')
+    window.loadingState.completeStep('start db thread')
+  
+    await config.start()
+    await peer.loadIdentity()
+  
+    channel.post('identity', peer.identity)
+  
+    channel.on('identity', async (identity)=>{
+      console.log('onidentity', identity)
+      peer.comms.remoteIdentity = identity
+      await peer.start()
+  
+      console.log('peer started')
+    })
+  
+    window.loadingState.startStep('authorized to party 😎')
+    await peer.comms.authorized()
+    console.log('authorized to party 😎')
+    window.loadingState.completeStep('authorized to party 😎')
+
+    return peer
+  }
+
+  static async setupSession(channel){
+
+    MainWindow.closeSetupForm()
+    MainWindow.openLoading()
+
 
     window.loadingState.startStep('configure permissions')
     await MainWindow.checkPermissions()
@@ -357,6 +416,8 @@ export class MainWindow {
     window.loadingState.completeStep('configure hardware')
 
     window.loadingState.startStep('configure db')
+    await MainWindow.setupDb(channel)
+    window.loadingState.completeStep('configure db')
 
 
     let searchElem = document.getElementById('search-input')
