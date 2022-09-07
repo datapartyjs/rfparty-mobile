@@ -12,7 +12,8 @@ const moment = require('moment')
 
 
 const Dataparty = require( '@dataparty/api/src/index-browser' )
-const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
+const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schema.json')
+//const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 
 function debug(...args){
   console.log('MainWindow -', ...args)
@@ -350,7 +351,7 @@ export class MainWindow {
   
     let peer = new Dataparty.PeerParty({
       comms: comms,
-      model: BouncerModel,
+      model: RFPartyModel,
       config: config
     })
   

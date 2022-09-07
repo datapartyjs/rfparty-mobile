@@ -1,12 +1,5 @@
 'use strict'
 
-const Hoek = require('hoek')
-//const BouncerDb = require('@dataparty/bouncer-db')
-/*
-require('mongoose-schema-jsonschema')(BouncerDb.mongoose())
-BouncerDb.mongoose().plugin(require("mongoose-ajv-plugin"))
-*/
-const debug = require('debug')('rfparty.ble_adv')
 
 const Dataparty = require('@dataparty/api/src/index')
 
@@ -21,14 +14,14 @@ class BleAdv extends ISchema {
 
   static get Schema(){
     return {
-      source: Utils.actor(['source']),
+      source: Utils.actor(['ble_source'], {indexId:true}),
       created: Utils.created,
-      address: Utils.string(18,20),
-      packet_hash: String,
+      address: { type: String, maxlength: 20, minlength: 18, index: true},
+      packet_hash: {type: String, index: true},
       packet_base64: String,
       packet_parsed: Object,
-      firstseen: Date,
-      lastseen: Date,
+      firstseen: {type: Date, index: true},
+      lastseen: {type: Date, index: true},
       seen: [{
         rssi: Number,
         timestamp: Utils.created
@@ -37,7 +30,7 @@ class BleAdv extends ISchema {
   }
 
   static setupSchema(schema){
-    schema.index({ name: 1 }, {unique: true})
+    schema.index({ source: {id: 1, type: 1} }, {unique: true})
     return schema
   }
 

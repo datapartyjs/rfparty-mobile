@@ -10,10 +10,11 @@
     "init": "node ./scripts/init.js",
     "prepare-nodejs": "cd www/nodejs-project && TARGET_ARCH=arm64 TARGET_PLATFORM=android npm install",
     "lint": "eslint --fix src/ || exit 0",
-    "repackage": "cordova clean android; cordova run android --debug",
+    "package": "cordova clean android; cordova run android --debug",
     "deploy": "cordova run android --debug",
+    "build-party": "./scripts/build-party.sh",
     "build-dev": "parcel build index.html --no-minify --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html",
-    "build": "parcel build index.html --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html"
+    "build": "npm run build-party; parcel build index.html --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html"
   },
   "author": "Dataparty",
   "license": "Apache-2.0",

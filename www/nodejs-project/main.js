@@ -22,7 +22,7 @@ async function main(channel){
     debug.debug('api')
     const Dataparty = require('@dataparty/api/dist/dataparty.js')
     debug.debug('model')
-    const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
+    const RFPartyModel = require('./party/xyz.dataparty.rfparty.dataparty-schema.json')
 
     debug.debug('config')
 
@@ -48,7 +48,7 @@ async function main(channel){
     debug.debug('tingoparty')
     party = new Dataparty.TingoParty({
       path: dbPath,
-      model: BouncerModel,
+      model: RFPartyModel,
       config: config
     })
 
@@ -60,7 +60,7 @@ async function main(channel){
         channel: channel
       }),
       hostParty: party,
-      model: BouncerModel,
+      model: RFPartyModel,
       config: config
     })
 
