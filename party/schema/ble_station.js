@@ -1,20 +1,21 @@
 'use strict'
 
-const ISchema = require('@dataparty/api/src/service/ischema')
 
+const ISchema = require('@dataparty/api/src/service/ischema')
 
 const Helpers = require('./helpers')
 
 
-class BleAdv extends ISchema {
+class BleStation extends ISchema {
 
-  static get Type () { return 'ble_adv' }
+  static get Type () { return 'ble_station' }
 
   static get Schema(){
     return {
-      packet: Helpers.BlePacket,
+      summary: Helpers.BleParsedAdv,
 
       ...Helpers.BleStationInfo
+      
     }
   }
 
@@ -32,4 +33,4 @@ class BleAdv extends ISchema {
 }
 
 
-module.exports = BleAdv
+module.exports = BleStation

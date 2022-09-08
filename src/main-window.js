@@ -231,11 +231,11 @@ export class MainWindow {
   static onBleDevice(dev){
     debug('device', dev)
 
-    navigator.geolocation.getCurrentPosition(MainWindow.onLocation, console.error, {
+    /*navigator.geolocation.getCurrentPosition(MainWindow.onLocation, console.error, {
       enableHighAccuracy: true,
       maximumAge: 30000,
       timeout: 30000
-    })
+    })*/
 
     if(!window.seen_macs[dev.id]){
       window.seen_macs[dev.id] = 0
@@ -250,10 +250,11 @@ export class MainWindow {
 
   static get Permissions(){
     return [
-      //cordova.plugins.permissions.ACCESS_BACKGROUND_LOCATION,
+      cordova.plugins.permissions.ACCESS_BACKGROUND_LOCATION,
       cordova.plugins.permissions.ACCESS_FINE_LOCATION,
-      //cordova.plugins.permissions.ACCESS_COARSE_LOCATION,
-      //cordova.plugins.permissions.BLUETOOTH_SCAN
+      cordova.plugins.permissions.ACTIVITY_RECOGNITION,
+      cordova.plugins.permissions.ACCESS_COARSE_LOCATION,
+      cordova.plugins.permissions.BLUETOOTH_SCAN
     ]
   }
 
@@ -263,7 +264,22 @@ export class MainWindow {
 
   static async requestPermissions(perms){
     debug('requesting permissions', perms)
-    return new Promise( (resolve,reject)=>cordova.plugins.permissions.requestPermissions(perms, resolve, reject) )
+
+    let result = []
+
+    for(let perm of perms){
+
+      debug('requesting permission', perm)
+      
+      let req = await new Promise((resolve,reject)=>
+        cordova.plugins.permissions.requestPermission(perm, resolve, reject))
+   
+
+      result.push({ permission:perm , ... req})
+    }
+
+    return result
+    
   }
 
   static async isLocationEnabled(){
@@ -303,9 +319,10 @@ export class MainWindow {
     if(needs.length > 0){
       let request = await MainWindow.requestPermissions(needs)
 
-      if(!request.hasPermission){
-        debug('permissions request failed')
-      }
+      //if(!request.hasPermission){
+        debug('permissions request result')
+        debug( JSON.stringify(request, null, 2))
+      //}
     }
 
 
@@ -338,6 +355,7 @@ export class MainWindow {
     setTimeout(async ()=>{
       debug('ble - stopping scan')
       await MainWindow.stopScan()
+      MainWindow.checkGeoLocation()
       MainWindow.scanLoop()
     }, 15000)
   }
@@ -393,6 +411,82 @@ export class MainWindow {
     return peer
   }
 
+  static checkGeoLocation(){
+
+    BackgroundGeolocation.checkStatus(function(status) {
+      console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+      console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+      console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+  
+      // you don't need to check status before start (this is just the example)
+      if (!status.isRunning) {
+        console.log('geolocation - start')
+        BackgroundGeolocation.start(); //triggers start on start event
+      }
+    });
+  }
+
+
+  static setupGeoLocation(){
+    BackgroundGeolocation.configure({
+      startOnBoot: true,
+      maxLocations: 30,
+      locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
+      desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
+      stationaryRadius: 50,
+      distanceFilter: 5,
+      notificationTitle: 'Rfparty in background',
+      notificationText: 'party on',
+      debug: false,
+      interval: 15000,
+      fastestInterval: 5000,
+      activitiesInterval: 10000,
+    })
+
+    BackgroundGeolocation.on('location', MainWindow.onLocation)
+
+    BackgroundGeolocation.on('background', function() {
+      console.log('[INFO] App is in background');
+      // you can also reconfigure service (changes will be applied immediately)
+      //BackgroundGeolocation.configure({ debug: true });
+    })
+  
+    BackgroundGeolocation.on('foreground', function() {
+      console.log('[INFO] App is in foreground');
+      //BackgroundGeolocation.configure({ debug: false });
+    })
+
+    BackgroundGeolocation.on('stationary', function(stationaryLocation) {
+      // handle stationary locations here
+      console.log('geolocation - stationary')
+    });
+  
+    BackgroundGeolocation.on('error', function(error) {
+      console.log('[ERROR] BackgroundGeolocation error:', error.code, error.message);
+    });
+  
+    BackgroundGeolocation.on('start', function() {
+      console.log('[INFO] BackgroundGeolocation service has been started');
+    });
+  
+    BackgroundGeolocation.on('stop', function() {
+      console.log('[INFO] BackgroundGeolocation service has been stopped');
+    });
+
+    BackgroundGeolocation.checkStatus(function(status) {
+      console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+      console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+      console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+  
+      // you don't need to check status before start (this is just the example)
+      if (!status.isRunning) {
+        BackgroundGeolocation.start(); //triggers start on start event
+      }
+    });
+
+    //BackgroundGeolocation.start()
+  }
+
   static async setupSession(channel){
 
     MainWindow.closeSetupForm()
@@ -400,6 +494,7 @@ export class MainWindow {
 
 
     window.loadingState.startStep('configure permissions')
+    await MainWindow.checkPermissions()
     await MainWindow.checkPermissions()
     window.loadingState.completeStep('configure permissions')
 
@@ -410,10 +505,12 @@ export class MainWindow {
 
     window.loadingState.startStep('configure hardware')
     MainWindow.scanLoop()
-    navigator.geolocation.watchPosition(MainWindow.onLocation, console.error, {
+
+    MainWindow.setupGeoLocation()
+    /*navigator.geolocation.watchPosition(MainWindow.onLocation, console.error, {
       enableHighAccuracy: true,
       maximumAge: 10000
-    })
+    })*/
     window.loadingState.completeStep('configure hardware')
 
     window.loadingState.startStep('configure db')

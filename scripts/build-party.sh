@@ -4,3 +4,4 @@ set -x
 
 node ./party/rfparty-build.js
 cp dataparty/*.json www/nodejs-project/party
+ls -lah dataparty

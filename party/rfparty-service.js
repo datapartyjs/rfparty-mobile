@@ -8,10 +8,9 @@ class RfpartyService extends Dataparty.IService {
     super(opts)
 
     this.addSchema(Path.join(__dirname, './schema/ble_adv.js'))
-    this.addSchema(Path.join(__dirname, './schema/source.js'))
+    this.addSchema(Path.join(__dirname, './schema/ble_station.js'))
+    this.addSchema(Path.join(__dirname, './schema/ble_source.js'))
 
-    //this.addSchema(Path.join(__dirname, './schema/ble_summary.js'))
-    //this.addSchema(Path.join(__dirname, './schema/station.js'))
   }
 
 }

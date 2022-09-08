@@ -15,8 +15,8 @@ class BleSource extends ISchema {
     return {
       created: Utils.created,
       info: {
-        uuid: String,
-        serial: String,
+        uuid: {type: String, index: true},
+        serial: {type: String, index: true},
         model: String,
         platform: String,
         sdkVersion: String,
@@ -28,8 +28,6 @@ class BleSource extends ISchema {
   }
 
   static setupSchema(schema){
-    schema.index({ 'info.uuid': 1 }, {unique: true})
-    schema.index({ 'info.serial': 1 })
     return schema
   }
 

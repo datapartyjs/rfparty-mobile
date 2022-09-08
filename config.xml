@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="xyz.dataparty.rfparty" version="1.0.2"  xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="xyz.dataparty.rfparty" version="1.0.2"  xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>rfparty</name>
     <description>
     A bluetooth tricorder
@@ -21,6 +21,14 @@
         <icon background="config/icon/android/mipmap-xxhdpi/ic_launcher_adaptive_back.png" density="xxhdpi" foreground="config/icon/android/mipmap-xxhdpi/ic_launcher_adaptive_fore.png" />
         <icon background="config/icon/android/mipmap-xxxhdpi/ic_launcher_adaptive_back.png" density="xxxhdpi" foreground="config/icon/android/mipmap-xxxhdpi/ic_launcher_adaptive_fore.png" />
         <allow-intent href="market:*" />
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+          <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+          <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+          <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+          <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+          <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+          
+        </config-file>
     </platform>
     <content src="index.html" />
     <access origin="*" />

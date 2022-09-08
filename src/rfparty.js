@@ -143,9 +143,9 @@ export class RFParty extends EventEmitter {
   indexLocation(location){
 
     //Update if we don't have a center or accuracy improves and autocenter is turned-on
-    if( !this.center || (this.autoCenter && (this.center.coords.accuracy > location.coords.accuracy)) ){
+    if( !this.center || (this.autoCenter && (this.center.accuracy > location.accuracy) )){
       this.center = location
-      this.map.setView([ location.coords.latitude, location.coords.longitude], 13)
+      this.map.setView([ location.latitude, location.longitude], 13)
     }
   }
 
