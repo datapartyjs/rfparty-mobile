@@ -3,9 +3,9 @@
 killall java
 cordova clean android
 cordova platform rm android
-rm -rf node_modules
-npm i
-npm run prepare-nodejs
+#rm -rf node_modules
+#npm i
+#npm run prepare-nodejs
 cordova platform add android@latest
 #cordova plugin add cordova-plugin-androidx
 cordova plugin add nodejs-mobile-cordova

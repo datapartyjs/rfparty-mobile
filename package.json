@@ -27,7 +27,8 @@
     "cordova-plugin-android-permissions": "^1.1.3",
     "cordova-plugin-androidx": "^3.0.0",
     "cordova-plugin-androidx-adapter": "^1.1.3",
-    "cordova-plugin-badge": "^0.8.8",
+    "cordova-plugin-background-mode": "^0.7.3",
+    "cordova-plugin-badge": "github:katzer/cordova-plugin-badge",
     "cordova-plugin-ble-central": "file:../cordova-plugin-ble-central",
     "cordova-plugin-console": "^1.1.0",
     "cordova-plugin-device": "^2.1.0",
@@ -35,6 +36,8 @@
     "cordova-plugin-exclude-files": "^1.0.1",
     "cordova-plugin-local-notification": "github:rgarciadelongoria/cordova-plugin-local-notifications",
     "cordova-plugin-play-default-sounds": "^1.0.1",
+    "cordova-plugin-powermanagement-orig": "github:sevenbitbyte/cordova-plugin-powermanagement",
+    "cordova.plugins.diagnostic": "^7.1.0",
     "eslint": "8.19.0",
     "events": "^3.3.0",
     "nodejs-mobile-cordova": "file:../nodejs-mobile-cordova",
@@ -79,7 +82,6 @@
     "plugins": {
       "cordova-plugin-console": {},
       "cordova-plugin-android-permissions": {},
-      "cordova-plugin-badge": {},
       "cordova-plugin-play-default-sounds": {},
       "nodejs-mobile-cordova": {},
       "cordova-plugin-device": {},
@@ -93,7 +95,14 @@
       "cordova-plugin-dialogs": {},
       "cordova-plugin-androidx": {},
       "cordova-plugin-exclude-files": {},
-      "cordova-background-geolocation-plugin": {}
+      "cordova-background-geolocation-plugin": {},
+      "at.gofg.sportscomputer.powermanagement": {},
+      "cordova-plugin-badge": {},
+      "cordova.plugins.diagnostic": {
+        "ANDROIDX_VERSION": "1.0.0",
+        "ANDROIDX_APPCOMPAT_VERSION": "1.3.1"
+      },
+      "cordova-plugin-background-mode": {}
     },
     "platforms": [
       "android"

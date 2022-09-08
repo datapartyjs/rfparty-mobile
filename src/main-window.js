@@ -75,6 +75,8 @@ window.printBle = function (){
   }
 }
 
+window.scanLoopTimer = null
+
 export class MainWindow {
   static async onload(divId, channel) {
     debug('RFParty.onload')
@@ -226,6 +228,8 @@ export class MainWindow {
     debug('location', location)
 
     window.rfparty.indexLocation(location)
+
+    MainWindow.scanLoop()
   }
 
   static onBleDevice(dev){
@@ -250,11 +254,12 @@ export class MainWindow {
 
   static get Permissions(){
     return [
-      cordova.plugins.permissions.ACCESS_BACKGROUND_LOCATION,
       cordova.plugins.permissions.ACCESS_FINE_LOCATION,
-      cordova.plugins.permissions.ACTIVITY_RECOGNITION,
       cordova.plugins.permissions.ACCESS_COARSE_LOCATION,
-      cordova.plugins.permissions.BLUETOOTH_SCAN
+      cordova.plugins.permissions.ACTIVITY_RECOGNITION,
+      cordova.plugins.permissions.ACCESS_BACKGROUND_LOCATION,
+      cordova.plugins.permissions.WAKE_LOCK,
+      //cordova.plugins.permissions.BLUETOOTH_SCAN
     ]
   }
 
@@ -270,7 +275,7 @@ export class MainWindow {
     for(let perm of perms){
 
       debug('requesting permission', perm)
-      
+
       let req = await new Promise((resolve,reject)=>
         cordova.plugins.permissions.requestPermission(perm, resolve, reject))
    
@@ -301,18 +306,13 @@ export class MainWindow {
   }
 
   static async checkPermissions(){
+    console.log('checkPermissions - ', MainWindow.Permissions)
     let needs = []
     for(let perm of MainWindow.Permissions){
       if(! (await MainWindow.hasPermission(perm)).hasPermission){
         needs.push( perm )
       }
     }
-
-    if(! (await MainWindow.isBleEnabled()) ){
-      debug('enabling BLE programtically')
-      await ble.withPromises.enable()
-    }
-
 
     debug('needs permissions', needs)
 
@@ -326,11 +326,56 @@ export class MainWindow {
     }
 
 
-    while(! (await MainWindow.isBleEnabled())){
-      debug('prompting user to enable ble')
-      await ble.withPromises.showBluetoothSettings()
+  }
+
+  static async setupBlePermissions(){
+    console.log('setupBlePermissions')
+    const bluetoothSetup = await MainWindow.isBluetoothSetup()
+    if( !bluetoothSetup ){
+      console.log('setupBlePermissions - setting permissions')
+      await MainWindow.setupBluetoothPermissions()
     }
 
+    if(! (await MainWindow.isBleEnabled()) ){
+      debug('setupBlePermissions - enabling BLE hw programtically')
+      await ble.withPromises.enable()
+    }
+
+    cordova.plugins.diagnostic.registerBluetoothStateChangeHandler(function(state){
+      console.log('bluetooth state changed - ', state)
+    });
+
+    /*while(! (await MainWindow.isBleEnabled())){
+      debug('prompting user to enable ble')
+      await ble.withPromises.showBluetoothSettings()
+    }*/
+  }
+
+  static async isBluetoothSetup(){
+    return new Promise((resolve,reject)=>{
+
+      console.log('isBluetoothSetup - checking')
+
+      cordova.plugins.diagnostic.getBluetoothAuthorizationStatuses((statuses)=>{
+        let granted = 0
+        for(var permission in statuses){
+          
+          let permEA = statuses[permission] == 'GRANTED'
+          
+          if(permEA){ granted++ }
+          
+          console.log('isBluetoothSetup - ' + permission + " permission is: " + statuses[permission])
+        }
+
+        resolve(granted == 3)
+      }, reject);
+    })
+  }
+
+  static async setupBluetoothPermissions(){
+    return new Promise((resolve, reject)=>{
+      cordova.plugins.diagnostic.requestBluetoothAuthorization(resolve, reject);
+    })
   }
 
   static async waitForHardware(){
@@ -344,19 +389,38 @@ export class MainWindow {
     await new Promise((resolve,reject)=>{ ble.stopScan(resolve,reject) })
   }
 
-  static scanLoop(){
-    debug('ble - starting scan')
-    ble.startScanWithOptions([],{
-      reportDuplicates: false,
-      scanMode: 'lowLatency',
-      reportDelay: 0
-    }, MainWindow.onBleDevice, console.error)
+  
 
-    setTimeout(async ()=>{
-      debug('ble - stopping scan')
-      await MainWindow.stopScan()
+  static async scanLoop(){
+    if(window.scanLoopTimer != null){ return }
+
+    if(await MainWindow.isBleEnabled()){
+
+      console.log('ble - starting scan')
+  
+      /*ble.startScanWithOptions([],{
+        reportDuplicates: false,
+        scanMode: 'lowLatency',
+        reportDelay: 0
+      }, MainWindow.onBleDevice, console.error)*/
+
+      ble.startScan([], MainWindow.onBleDevice, console.error)
+
+    }
+
+
+    window.scanLoopTimer = setTimeout(async ()=>{
+      window.scanLoopTimer = null
+
+      if(await MainWindow.isBleEnabled()){
+        console.log('ble - stopping scan')
+        await MainWindow.stopScan()
+      }
+      else{
+        console.log('ble not enabled')
+      }
       MainWindow.checkGeoLocation()
-      MainWindow.scanLoop()
+      await MainWindow.scanLoop()
     }, 15000)
   }
 
@@ -429,14 +493,15 @@ export class MainWindow {
 
   static setupGeoLocation(){
     BackgroundGeolocation.configure({
-      startOnBoot: true,
+      startOnBoot: false,
+      notificationsEnabled: false,
       maxLocations: 30,
       locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
       stationaryRadius: 50,
       distanceFilter: 5,
-      notificationTitle: 'Rfparty in background',
-      notificationText: 'party on',
+      //notificationTitle: 'Rfparty in background',
+      notificationText: 'partying in background',
       debug: false,
       interval: 15000,
       fastestInterval: 5000,
@@ -493,9 +558,35 @@ export class MainWindow {
     MainWindow.openLoading()
 
 
+
+    cordova.plugins.backgroundMode.setDefaults({
+      title: 'rfparty',
+      text: 'partying in the background',
+      icon: 'ic_launcher', // this will look for icon.png in platforms/android/res/drawable|mipmap
+      color: '000000', // hex format like 'F14F4D'
+      //resume: Boolean,
+      //hidden: true,
+      silent: true
+      //bigText: Boolean
+    })
+
+    cordova.plugins.backgroundMode.enable()
+
+    setInterval(()=>{
+      console.log('WATCHDOG - 1min')
+
+      if(cordova.plugins.backgroundMode.isActive()){
+
+        console.log('\t WAKE UP')
+        cordova.plugins.backgroundMode.wakeUp()
+      }
+    }, 60*1000)
+
     window.loadingState.startStep('configure permissions')
     await MainWindow.checkPermissions()
     await MainWindow.checkPermissions()
+    
+    await MainWindow.setupBlePermissions()
     window.loadingState.completeStep('configure permissions')
 
 
@@ -504,13 +595,28 @@ export class MainWindow {
     window.loadingState.completeStep('please enable location')
 
     window.loadingState.startStep('configure hardware')
-    MainWindow.scanLoop()
+    await MainWindow.scanLoop()
 
     MainWindow.setupGeoLocation()
     /*navigator.geolocation.watchPosition(MainWindow.onLocation, console.error, {
       enableHighAccuracy: true,
       maximumAge: 10000
     })*/
+
+    window.powerManagement.setReleaseOnPause(false, function() {
+      console.log('wakelock - Set successfully');
+
+      window.powerManagement.dim(function() {
+        console.log('Wakelock - full lock acquired');
+      }, function() {
+        console.log('wakelock - Failed to acquire wakelock');
+      }, false);
+
+      
+    }, function() {
+      console.log('wakelock - Failed to set');
+    })
+    
     window.loadingState.completeStep('configure hardware')
 
     window.loadingState.startStep('configure db')
