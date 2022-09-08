@@ -54,6 +54,9 @@ const SearchSuggestions = {
   error: false
 }
 
+window.lastScanStart = moment().subtract(10, 'minutes')
+window.isScanning = false
+
 window.advertisements = {}
 window.seen_macs = {}
 
@@ -75,7 +78,6 @@ window.printBle = function (){
   }
 }
 
-window.scanLoopTimer = null
 
 export class MainWindow {
   static async onload(divId, channel) {
@@ -389,39 +391,57 @@ export class MainWindow {
     await new Promise((resolve,reject)=>{ ble.stopScan(resolve,reject) })
   }
 
+
+  static async isScreenOff(){
+    return new Promise((resolve,reject)=>{
+      cordova.plugins.backgroundMode.isScreenOff(resolve)
+    })
+  }
   
 
   static async scanLoop(){
-    if(window.scanLoopTimer != null){ return }
 
-    if(await MainWindow.isBleEnabled()){
+    let now = moment()
+    let deltaMs = now.diff(window.lastScanStart, 'ms')
 
-      console.log('ble - starting scan')
-  
-      /*ble.startScanWithOptions([],{
-        reportDuplicates: false,
-        scanMode: 'lowLatency',
-        reportDelay: 0
-      }, MainWindow.onBleDevice, console.error)*/
-
-      ble.startScan([], MainWindow.onBleDevice, console.error)
-
+    if(deltaMs < 10000){
+      return
     }
 
 
-    window.scanLoopTimer = setTimeout(async ()=>{
-      window.scanLoopTimer = null
 
-      if(await MainWindow.isBleEnabled()){
-        console.log('ble - stopping scan')
+    console.log('scanLoop')
+
+    if(await MainWindow.isBleEnabled()){
+
+      if(window.isScanning){
+        console.log('scanLoop - stopping ble scan')
         await MainWindow.stopScan()
+        window.isScanning = false
       }
-      else{
-        console.log('ble not enabled')
+
+      console.log('scanLoop - starting ble scan')
+  
+      ble.startScanWithOptions([],{
+        reportDuplicates: false,
+        scanMode: 'lowLatency',
+        reportDelay: 0
+      }, MainWindow.onBleDevice, console.error)
+
+      if(cordova.plugins.backgroundMode.isActive() /*&& await MainWindow.isScreenOff()*/){
+
+        console.log('\t scanLoop - WAKE UP')
+        cordova.plugins.backgroundMode.wakeUp()
       }
+
+      window.isScanning = true
+      window.lastScanStart = now
+
       MainWindow.checkGeoLocation()
-      await MainWindow.scanLoop()
-    }, 15000)
+    }
+    else{
+      console.log('scanLoop - ble not enabled')
+    }
   }
 
   static async setupDb(channel){
@@ -572,15 +592,9 @@ export class MainWindow {
 
     cordova.plugins.backgroundMode.enable()
 
-    setInterval(()=>{
-      console.log('WATCHDOG - 1min')
-
-      if(cordova.plugins.backgroundMode.isActive()){
-
-        console.log('\t WAKE UP')
-        cordova.plugins.backgroundMode.wakeUp()
-      }
-    }, 60*1000)
+    setInterval(async ()=>{
+      await MainWindow.scanLoop()
+    }, 2*1000)
 
     window.loadingState.startStep('configure permissions')
     await MainWindow.checkPermissions()
@@ -606,8 +620,8 @@ export class MainWindow {
     window.powerManagement.setReleaseOnPause(false, function() {
       console.log('wakelock - Set successfully');
 
-      window.powerManagement.dim(function() {
-        console.log('Wakelock - full lock acquired');
+      window.powerManagement.cpu(function() {
+        console.log('Wakelock - cpu lock acquired');
       }, function() {
         console.log('wakelock - Failed to acquire wakelock');
       }, false);
