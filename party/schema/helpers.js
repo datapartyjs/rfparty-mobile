@@ -2,13 +2,16 @@ const ISchema = require('@dataparty/api/src/service/ischema')
 
 const Utils = ISchema.Utils
 
+Utils.created = {
+  type: Number,
+  default: Date.now,
+  required: true
+}
+
 exports.Location = {
   lat: Number,
   lon: Number
 }
-
-
-
 
 exports.LocationIndexed = {
   lat: {type: Number, index: true},
@@ -91,8 +94,8 @@ exports.BlePacket = {
   parsed: exports.BleParsedAdv,
   seen: [{
     rssi: Number,
-    timestamp: Utils.created,
-    location: exports.Location
+    time: Utils.created,
+    //location: exports.Location
   }]
 }
 
@@ -103,12 +106,12 @@ exports.GeoBoundsIndexed = {
 
 exports.TimeBoundsIndexed = {
   duration: {type: Number, index: true},
-  first: {type: Date, index: true},
-  last: {type: Date, index: true},
+  first: {type: Number, index: true},
+  last: {type: Number, index: true},
 }
 
 exports.BleStationInfo = {
-  source: Utils.actor(['ble_source'], {indexId:true}),
+  //source: Utils.actor(['ble_source'], {indexId:true}),
   created: Utils.created,
   address: { type: String, maxlength: 20, minlength: 18, index: true},
 
@@ -117,22 +120,23 @@ exports.BleStationInfo = {
     first: exports.LocationIndexed,
     last: exports.LocationIndexed
   },
+  
+  geobounds: exports.GeoBoundsIndexed,
 
   best: {
-    timestamp: {type:Date, index: true},
+    time: {type:Number, index: true},
     rssi: {type: Number, index: true}
   },
 
   worst: {
-    timestamp: {type:Date, index: true},
+    time: {type:Number, index: true},
     rssi: {type: Number, index: true}
-  },
+  }
 
-  geobounds: exports.GeoBoundsIndexed,
 }
 
 exports.GeoPoint = {
-  time: Date,
+  time: Number,
   accuracy: Number,
   altitude: Number,
   bearing: Number,
@@ -149,7 +153,7 @@ exports.GeoPoint = {
 }
 
 exports.GeoTrackInfo = {
-  source: Utils.actor(['ble_source'], {indexId:true}),
+  //source: Utils.actor(['ble_source'], {indexId:true}),
   created: Utils.created,
 
   timebounds: exports.TimeBoundsIndexed,
@@ -162,4 +166,17 @@ exports.GeoTrackInfo = {
   geobounds: exports.GeoBoundsIndexed,
 
   points: [exports.GeoPoint]
+}
+
+exports.ActivityInfo = {
+  //source: Utils.actor(['ble_source'], {indexId:true}),
+  created: Utils.created,
+
+  timebounds: exports.TimeBoundsIndexed,
+
+  activity: [{
+    type: {type: String},
+    confidence: Number,
+    time: Number
+  }]
 }

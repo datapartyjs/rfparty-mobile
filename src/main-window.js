@@ -8,17 +8,24 @@ import { stringify } from 'json5'
 import { GapParser } from './gap-parser'
 const Loki = require('lokijs')
 const LokiIndexAdapter = require('lokijs/src/loki-indexed-adapter')
-//const debug = require('debug')('MainWindow')
+
+const Debug = require('debug')
+const debug = Debug('MainWindow')
+const onLocationDebug = Debug('geolocation')
 const moment = require('moment')
+
 
 
 const Dataparty = require( '@dataparty/api/src/index-browser' )
 const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schema.json')
+
+const RFPartyDocuments = require('./documents')
+
 //const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 
-function debug(...args){
-  console.log('MainWindow -', ...args)
-}
+/*function debug(...args){
+  debug('MainWindow -', ...args)
+}*/
 
 const byteToHex = [];
 for(let n=0; n<0xff; ++n){
@@ -70,18 +77,23 @@ window.printBle = function (){
 
     //const buffer = Buffer.from( station.advertising.data, 'base64' )
     
-    console.log(station)
+    debug(station)
 
     const fields = GapParser.parseBase64String( station.advertising.data ) 
 
-    console.log( fields )
+    debug( fields )
 
-    //console.log('\t', buffer.toString('hex'))
+    //debug('\t', buffer.toString('hex'))
   }
 }
 
 
 export class MainWindow {
+
+  static get scanWindow() {
+    return 60000
+  }
+
   static async onload(divId, channel) {
     debug('RFParty.onload')
     window.rfparty = new RFParty(divId)
@@ -104,7 +116,7 @@ export class MainWindow {
   static addRemoveClass(divId, addRemove='add', className='hidden', display='block'){
     var div = document.getElementById(divId)
 
-    //console.log('div', addRemove, className, div)
+    //debug('div', addRemove, className, div)
     
     if(addRemove==='remove'){
       div.classList.remove(className)
@@ -112,10 +124,10 @@ export class MainWindow {
       if(className=='hidden'){
         div.style.display = display
       }
-      //console.log('remove')
+      //debug('remove')
     }
     else{
-      //console.log('add')
+      //debug('add')
       
       if(className=='hidden'){
         div.style.display = "none";
@@ -211,38 +223,37 @@ export class MainWindow {
     })
   }
 
-  static onLocation(location){
-    debug('location', location)
+  static async onLocation(location){
+    onLocationDebug('location', location)
 
-    window.rfparty.indexLocation(location)
+    const point = {
+      time: moment(location.time).valueOf(),
+      accuracy: location.accuracy,
+      altitude: location.altitude,
+      bearing: location.bearing,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      speed: location.speed,
+    
+      isStationary: location.isStationary ? true : false,
+      
+      provider: location.provider,
+      locationProvider: location.locationProvider,
+      isFromMockProvider: location.isFromMockProvider ? true : undefined,
+      mockLocationsEnabled: location.mockLocationsEnabled ? true : undefined,
+    }
 
-    window.locations.push(location)
 
+    window.rfparty.indexLocation(point)
     MainWindow.scanLoop()
   }
 
   static async onBleDevice(dev){
     debug('device', dev)
 
-    /*navigator.geolocation.getCurrentPosition(MainWindow.onLocation, console.error, {
-      enableHighAccuracy: true,
-      maximumAge: 30000,
-      timeout: 30000
-    })*/
-
-    if(!window.seen_macs[dev.id]){
-      window.seen_macs[dev.id] = 0
-      //window.loadingState.startStep('dev '+dev.id, 100)
-    }
-
-    await window.rfparty.indexDevice(dev)
-
-    window.seen_macs[dev.id]++
-    window.advertisements[dev.id] =  { ...dev }
-
-    //window.loadingState.completePart('dev '+dev.id)
-
-    await MainWindow.scanLoop()
+    
+    window.rfparty.indexDevice(dev)
+    MainWindow.scanLoop()
   }
 
   static get Permissions(){
@@ -299,7 +310,7 @@ export class MainWindow {
   }
 
   static async checkPermissions(){
-    console.log('checkPermissions - ', MainWindow.Permissions)
+    debug('checkPermissions - ', MainWindow.Permissions)
     let needs = []
     for(let perm of MainWindow.Permissions){
       if(! (await MainWindow.hasPermission(perm)).hasPermission){
@@ -322,10 +333,10 @@ export class MainWindow {
   }
 
   static async setupBlePermissions(){
-    console.log('setupBlePermissions')
+    debug('setupBlePermissions')
     const bluetoothSetup = await MainWindow.isBluetoothSetup()
     if( !bluetoothSetup ){
-      console.log('setupBlePermissions - setting permissions')
+      debug('setupBlePermissions - setting permissions')
       await MainWindow.setupBluetoothPermissions()
     }
 
@@ -335,7 +346,7 @@ export class MainWindow {
     }
 
     cordova.plugins.diagnostic.registerBluetoothStateChangeHandler(function(state){
-      console.log('bluetooth state changed - ', state)
+      debug('bluetooth state changed - ', state)
     });
 
     /*while(! (await MainWindow.isBleEnabled())){
@@ -347,7 +358,7 @@ export class MainWindow {
   static async isBluetoothSetup(){
     return new Promise((resolve,reject)=>{
 
-      console.log('isBluetoothSetup - checking')
+      debug('isBluetoothSetup - checking')
 
       cordova.plugins.diagnostic.getBluetoothAuthorizationStatuses((statuses)=>{
         let granted = 0
@@ -357,7 +368,7 @@ export class MainWindow {
           
           if(permEA){ granted++ }
           
-          console.log('isBluetoothSetup - ' + permission + " permission is: " + statuses[permission])
+          debug('isBluetoothSetup - ' + permission + " permission is: " + statuses[permission])
         }
 
         resolve(granted == 3)
@@ -395,23 +406,22 @@ export class MainWindow {
     let now = moment()
     let deltaMs = now.diff(window.lastScanStart, 'ms')
 
-    if(deltaMs < 10000){
+    if(deltaMs < MainWindow.scanWindow){
+      debug('.')
       return
     }
 
-
-
-    console.log('scanLoop')
+    debug('scanLoop')
 
     if(await MainWindow.isBleEnabled()){
 
       if(window.isScanning){
-        console.log('scanLoop - stopping ble scan')
+        debug('scanLoop - stopping ble scan')
         await MainWindow.stopScan()
         window.isScanning = false
       }
 
-      console.log('scanLoop - starting ble scan')
+      debug('scanLoop - starting ble scan', moment().format())
   
       ble.startScanWithOptions([],{
         reportDuplicates: false,
@@ -421,7 +431,7 @@ export class MainWindow {
 
       if(cordova.plugins.backgroundMode.isActive() /*&& await MainWindow.isScreenOff()*/){
 
-        console.log('\t scanLoop - WAKE UP - ', moment().format())
+        debug('\t scanLoop - WAKE UP - ', moment().format())
         cordova.plugins.backgroundMode.wakeUp()
       }
 
@@ -431,12 +441,12 @@ export class MainWindow {
       MainWindow.checkGeoLocation()
     }
     else{
-      console.log('scanLoop - ble not enabled')
+      debug('scanLoop - ble not enabled')
 
       window.isScanning = false
     }
 
-    setTimeout(MainWindow.scanLoop, 10000)
+    setTimeout(MainWindow.scanLoop, MainWindow.scanWindow)
   }
 
   static IndexedDb(){
@@ -473,42 +483,46 @@ export class MainWindow {
   
     let peer = new Dataparty.PeerParty({
       comms: comms,
+      noCache: true,
       model: RFPartyModel,
+      factories: RFPartyDocuments,
       config: config
     })
   
   
     window.loadingState.startStep('start db thread')
-    console.log('starting nodejs')
+    debug('starting nodejs')
     let nodejsStart = new Promise((resolve, reject)=>{
       nodejs.start('main.js', (err)=>{
         if(err){
-          console.log(err)
+          debug(err)
           reject(err) }
         else { resolve() }
       })
     })
   
     await nodejsStart
-    console.log ('nodejs Mobile Engine Started')
+    debug ('nodejs Mobile Engine Started')
     window.loadingState.completeStep('start db thread')
   
     await config.start()
     await peer.loadIdentity()
+
+    //channel.post('debug-settings', localStorage.getItem('node_debug'))
   
     channel.post('identity', peer.identity)
   
     channel.on('identity', async (identity)=>{
-      console.log('onidentity', identity)
+      debug('onidentity', identity)
       peer.comms.remoteIdentity = identity
       await peer.start()
   
-      console.log('peer started')
+      debug('peer started')
     })
   
     window.loadingState.startStep('authorized to party 😎')
     await peer.comms.authorized()
-    console.log('authorized to party 😎')
+    debug('authorized to party 😎')
     window.loadingState.completeStep('authorized to party 😎')
 
     await window.rfparty.start(peer)
@@ -517,13 +531,11 @@ export class MainWindow {
   static checkGeoLocation(){
 
     BackgroundGeolocation.checkStatus(function(status) {
-      console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-      console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-      console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
-  
-      // you don't need to check status before start (this is just the example)
+      debug('geolocation service is running', status.isRunning)
+      debug('geolocation services enabled', status.locationServicesEnabled)
+      
       if (!status.isRunning) {
-        console.log('geolocation - start')
+        debug('geolocation - start')
         BackgroundGeolocation.start(); //triggers start on start event
       }
     });
@@ -550,37 +562,43 @@ export class MainWindow {
     BackgroundGeolocation.on('location', MainWindow.onLocation)
 
     BackgroundGeolocation.on('background', function() {
-      console.log('[INFO] App is in background');
+      onLocationDebug('[INFO] App is in background');
       // you can also reconfigure service (changes will be applied immediately)
       //BackgroundGeolocation.configure({ debug: true });
     })
   
     BackgroundGeolocation.on('foreground', function() {
-      console.log('[INFO] App is in foreground');
+      onLocationDebug('[INFO] App is in foreground');
       //BackgroundGeolocation.configure({ debug: false });
     })
 
     BackgroundGeolocation.on('stationary', function(stationaryLocation) {
       // handle stationary locations here
-      console.log('geolocation - stationary')
-    });
+      onLocationDebug('geolocation - stationary', stationaryLocation)
+      MainWindow.onLocation({isStationary: true, ...stationaryLocation})
+    })
   
+    BackgroundGeolocation.on('activity', function(activity) {
+      // handle stationary locations here
+      onLocationDebug('geolocation - activity', activity)
+    })
+
     BackgroundGeolocation.on('error', function(error) {
-      console.log('[ERROR] BackgroundGeolocation error:', error.code, error.message);
-    });
+      onLocationDebug('[ERROR] BackgroundGeolocation error:', error.code, error.message);
+    })
   
     BackgroundGeolocation.on('start', function() {
-      console.log('[INFO] BackgroundGeolocation service has been started');
-    });
+      onLocationDebug('[INFO] BackgroundGeolocation service has been started');
+    })
   
     BackgroundGeolocation.on('stop', function() {
-      console.log('[INFO] BackgroundGeolocation service has been stopped');
-    });
+      onLocationDebug('[INFO] BackgroundGeolocation service has been stopped');
+    })
 
     BackgroundGeolocation.checkStatus(function(status) {
-      console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-      console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-      console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+      onLocationDebug('[INFO] BackgroundGeolocation service is running', status.isRunning)
+      onLocationDebug('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled)
+      onLocationDebug('[INFO] BackgroundGeolocation auth status: ' + status.authorization)
   
       // you don't need to check status before start (this is just the example)
       if (!status.isRunning) {
@@ -611,9 +629,9 @@ export class MainWindow {
 
     cordova.plugins.backgroundMode.enable()
 
-    setInterval(async ()=>{
+    window.watchdogInterval = setInterval(async ()=>{
       await MainWindow.scanLoop()
-    }, 2*1000)
+    }, 5*1000)
 
     window.loadingState.startStep('configure permissions')
     await MainWindow.checkPermissions()
@@ -641,17 +659,17 @@ export class MainWindow {
     })*/
 
     window.powerManagement.setReleaseOnPause(false, function() {
-      console.log('wakelock - Set successfully');
+      debug('wakelock - Set successfully');
 
       window.powerManagement.cpu(function() {
-        console.log('Wakelock - cpu lock acquired');
+        debug('Wakelock - cpu lock acquired');
       }, function() {
-        console.log('wakelock - Failed to acquire wakelock');
+        debug('wakelock - Failed to acquire wakelock');
       }, false);
 
       
     }, function() {
-      console.log('wakelock - Failed to set');
+      debug('wakelock - Failed to set');
     })
     
     window.loadingState.completeStep('configure hardware')
@@ -690,7 +708,7 @@ export class MainWindow {
     })
 
     window.rfparty.on('update-finished', (data)=>{
-      console.log('update complete', data.updateDuration, data)
+      debug('update complete', data.updateDuration, data)
       let updateTime = Math.round( (data.updateDuration/1000) * 100) / 100
       searchStatusElem.innerText = 'showing ' +data.render.onscreen +' out of ' + data.render.count + ' results in ' + updateTime + ' seconds'
       window.MainWindow.showDiv('search-status')
@@ -698,13 +716,13 @@ export class MainWindow {
 
 
     searchElem.addEventListener('input', (event)=>{
-      console.log('input', event)
+      debug('input', event)
 
       
       const hints = MainWindow.searchSuggestion(event.target.value)
 
 
-      console.log('hint', event.target.value, hints)
+      debug('hint', event.target.value, hints)
 
       if(hints.length == 0){
         window.MainWindow.hideDiv('search-hint')
@@ -727,7 +745,7 @@ export class MainWindow {
       
       const input = event.target.value
 
-      console.log('search input', input)
+      debug('search input', input)
 
       searchStatusElem.innerText = 'searching . . .'
       window.MainWindow.showDiv('search-status')
@@ -738,7 +756,7 @@ export class MainWindow {
 
     })
 
-    await MainWindow.delay(10000) 
+    //await MainWindow.delay(10000) 
 
     MainWindow.closeLoading()
   }

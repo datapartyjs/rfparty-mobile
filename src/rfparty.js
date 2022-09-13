@@ -4,7 +4,7 @@
 import { last } from 'lodash'
 
 const md5 = require('md5')
-const debug = (...args)=>{ console.log('rfparty', ...args) }  // require('debug')('rfparty')
+const debug = /*(...args)=>{ debug('rfparty', ...args) }*/  require('debug')('rfparty')
 const Leaflet = require('leaflet')
 const JSON5 = require('json5')
 const Pkg = require('../package.json')
@@ -13,6 +13,8 @@ const reach = require('./reach')
 const Loki = require('lokijs')
 const moment = require('moment')
 const EventEmitter = require('last-eventemitter')
+
+const RFPartyDocuments = require('./documents')
 
 import * as UUID16_TABLES from './16bit-uuid-tables'
 import * as MANUFACTURER_TABLE from './manufacturer-company-id.json' 
@@ -144,7 +146,7 @@ export class RFParty extends EventEmitter {
 
   }
 
-  indexLocation(location){
+  async indexLocation(location){
 
     //Update if we don't have a center or accuracy improves and autocenter is turned-on
     if( !this.center || (this.autoCenter && (this.center.accuracy > location.accuracy) )){
@@ -152,6 +154,7 @@ export class RFParty extends EventEmitter {
       this.map.setView([ location.latitude, location.longitude], 13)
     }
 
+    await RFPartyDocuments.geo_track.indexGeoPoint(this.party, location)
   }
 
   async indexDevice(dev){
@@ -160,7 +163,7 @@ export class RFParty extends EventEmitter {
 
     debug('indexDevice -', dev)
 
-    const now = (new Date()).toISOString()
+    const now = moment().valueOf()
     const packetHash = md5(dev.advertising.data)
 
 
@@ -192,7 +195,7 @@ export class RFParty extends EventEmitter {
           },
         
           best: {
-            timestamp: now,
+            time: now,
             rssi: dev.rssi
           },
         
@@ -208,6 +211,7 @@ export class RFParty extends EventEmitter {
         debug('found - bleAdv', bleAdvDoc.data)
 
         bleAdvDoc.data.lastseen = now
+        bleAdvDoc.data.duration = moment(now).diff( moment(bleAdvDoc.data.firstseen), 'ms')
         bleAdvDoc.data.location.last = this.lastLocation
       }
 
@@ -218,7 +222,7 @@ export class RFParty extends EventEmitter {
 
       bleAdvDoc.data.packet.seen.push({
         rssi: dev.rssi,
-        timestamp: (new Date()).toISOString(),
+        time: now,
         location: this.lastLocation
       })
 
@@ -235,7 +239,7 @@ export class RFParty extends EventEmitter {
   }
 
   async start(party) {
-    console.log('starting')
+    debug('starting')
 
     this.party = party
     
@@ -253,7 +257,7 @@ export class RFParty extends EventEmitter {
 
     let awayTime = this.db.getCollection('awayTime').find()
 
-    console.log('found', awayTime.length, 'away time periods')
+    debug('found', awayTime.length, 'away time periods')
 
     this.lastQuery = {duration: {
       $gt: 30*60000
@@ -267,7 +271,7 @@ export class RFParty extends EventEmitter {
 
       let latlngs = this.trackToLatLonArray(track)
 
-      console.log('\trendering', latlngs.length, 'track points')
+      debug('\trendering', latlngs.length, 'track points')
 
       if(this.showAwayTracks){
         Leaflet.polyline(latlngs, { color: 'yellow', opacity: 0.74, weight: '2' }).addTo(this.map)
@@ -315,10 +319,10 @@ export class RFParty extends EventEmitter {
     let updateStartTime = new moment()
 
     if(input[0]=='{'){
-      console.log('raw query')
+      debug('raw query')
       const obj = JSON5.parse(input)
 
-      console.log('parsed query', obj)
+      debug('parsed query', obj)
       query = obj
     }else{
       const tokens = input.split(' ')
@@ -366,23 +370,23 @@ export class RFParty extends EventEmitter {
           break
         case 'name':
         case 'localname':
-          console.log('select by name', tokens)
+          debug('select by name', tokens)
           query = {
             'advertisement.localName':  {'$contains':  term }
           }
   
-          console.log('term['+term+']')
+          debug('term['+term+']')
   
           break
         case 'company':
-          console.log('select by company', tokens)
+          debug('select by company', tokens)
           query = {
             'company':  {'$contains':  term }
           }
           break
   
         case 'product':
-          console.log('select by product', tokens)
+          debug('select by product', tokens)
           
           query = {
             'product':  {'$contains':  term }
@@ -397,9 +401,9 @@ export class RFParty extends EventEmitter {
           break
         case 'service':
           const serviceTerm = tokens[1]
-          console.log('select by service', serviceTerm)
+          debug('select by service', serviceTerm)
           let possibleServices = RFParty.reverseLookupService(serviceTerm)
-          console.log('possible', possibleServices)
+          debug('possible', possibleServices)
           query = {
             'services':  {'$containsAny':  possibleServices },
             ...this.parseServiceSearch(serviceTerm.toLowerCase(), tokens.slice(2))
@@ -408,7 +412,7 @@ export class RFParty extends EventEmitter {
   
         case 'appleip':
         case 'appleIp':
-          console.log('select by appleIp', tokens)
+          debug('select by appleIp', tokens)
           if(tokens.length < 2){
             query = {
               'appleIp':  {'$exists': true }
@@ -460,7 +464,7 @@ export class RFParty extends EventEmitter {
           break
   
         default:
-          console.log('invalid search type', tokens[0])
+          debug('invalid search type', tokens[0])
           this.emit('search-failed')
           return
       }
@@ -478,7 +482,7 @@ export class RFParty extends EventEmitter {
   }
 
   async doQuery(query, updateStartTime=new moment()){
-    console.log('running query...', query)
+    debug('running query...', query)
 
     this.emit('search-start', {query})
 
@@ -494,7 +498,7 @@ export class RFParty extends EventEmitter {
 
     let durations = {searchDuration}
 
-    //console.log('rendering devices...', devices)
+    //debug('rendering devices...', devices)
     if(devices != null){
 
       this.emit('render-start')
@@ -547,7 +551,7 @@ export class RFParty extends EventEmitter {
       drawable: 0
     }
 
-    console.log('\trendering', bleDevices.length, 'ble devices')
+    debug('\trendering', bleDevices.length, 'ble devices')
 
     let restrictToBounds = this.restrictToBounds || bleDevices.length > 3000
 
@@ -652,7 +656,7 @@ export class RFParty extends EventEmitter {
 
       let device = this.getBLEDevice(devices[0])
 
-      console.log('updateDeviceInfoHud', device)
+      debug('updateDeviceInfoHud', device)
 
 
       //document.getElementById('device-info-mac').textContent = reach(device, 'address')
@@ -750,11 +754,11 @@ export class RFParty extends EventEmitter {
 
 
   handleClick({id, type, value, timestamp, event}){
-    console.log('clicked type=', type, value, timestamp, event)
+    debug('clicked type=', type, value, timestamp, event)
 
     if(type == 'ble'){
 
-      console.log('shift', event.originalEvent.shiftKey)
+      debug('shift', event.originalEvent.shiftKey)
 
       //this.selectedLayers = [ value ]
 
@@ -975,10 +979,10 @@ export class RFParty extends EventEmitter {
   }
 
   async addScanDb(serializedDb, name) {
-    //console.log('opening scan db', name, '...')
+    //debug('opening scan db', name, '...')
     let scanDb = new Loki(name)
     scanDb.loadJSON(serializedDb)
-    //console.log('opened scan db', name)
+    //debug('opened scan db', name)
 
 
     let homeState = this.db.getCollection('homeState')
@@ -989,14 +993,14 @@ export class RFParty extends EventEmitter {
 
 
     let dbInfo = scanDb.listCollections()
-    //console.log(dbInfo)
+    //debug(dbInfo)
     let parts = scanDbHomeState.count() + scanDbBle.count() + scanDbWifi.count()
   
     
     window.loadingState.startStep('index '+name, parts)
 
 
-    console.log('importing home state . . .')
+    debug('importing home state . . .')
     let awayObj = null
     let isAway = false
     
@@ -1045,15 +1049,15 @@ export class RFParty extends EventEmitter {
 
         this.db.getCollection('awayTime').insert(awayObj)
 
-        //console.log('timeaway', awayObj)
-        //console.log(moment(awayObj.starttime).format(), 'to', moment(awayObj.endtime).format())
+        //debug('timeaway', awayObj)
+        //debug(moment(awayObj.starttime).format(), 'to', moment(awayObj.endtime).format())
 
         awayObj = null
         isAway = false
       }
     }
 
-    console.log('importing ble . . .')
+    debug('importing ble . . .')
     
     for (let device of scanDbBle.chain().find().data({ removeMeta: true })) {
 
@@ -1235,7 +1239,7 @@ export class RFParty extends EventEmitter {
     
     
     
-    console.log('importing wifi . . .')
+    debug('importing wifi . . .')
     window.loadingState.completeStep('index '+name)
     
     await delay(200)
@@ -1247,7 +1251,7 @@ export class RFParty extends EventEmitter {
   }
 
   async addGpx(obj, name) {
-    console.log('adding gpx', name)
+    debug('adding gpx', name)
 
     let collection = this.db.getCollection('locationTrack')
 
@@ -1258,7 +1262,7 @@ export class RFParty extends EventEmitter {
     if(!trackPoints){
        window.loadingState.startStep('index '+name, 1)
        window.loadingState.completeStep('index '+name)
-       console.log('added gpx', name, 'with', undefined, 'points')
+       debug('added gpx', name, 'with', undefined, 'points')
        return
     }
     
@@ -1303,7 +1307,7 @@ export class RFParty extends EventEmitter {
       }
     }
 
-    //console.log('loaded gpx', name)
+    //debug('loaded gpx', name)
 
     if(this.showAllTracks){
       this.gpxLines[name] = Leaflet.polyline(latlngs, { color: 'red', opacity: 0.4, weight: '2' })
@@ -1314,9 +1318,9 @@ export class RFParty extends EventEmitter {
 
     
     window.loadingState.completeStep('index '+name)
-    console.log('added gpx', name, 'with', trackPoints.length, 'points')
-    //console.log('latlong', latlngs)
-    //console.log('tracks', trackPoints)
+    debug('added gpx', name, 'with', trackPoints.length, 'points')
+    //debug('latlong', latlngs)
+    //debug('tracks', trackPoints)
   }
 
   static get Version() {

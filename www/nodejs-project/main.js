@@ -48,6 +48,7 @@ async function main(channel){
     debug.debug('tingoparty')
     party = new Dataparty.TingoParty({
       path: dbPath,
+      noCache: true,
       model: RFPartyModel,
       config: config
     })
