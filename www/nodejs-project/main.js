@@ -1,6 +1,6 @@
 // Require the 'cordova-bridge' to enable communications between the
 // Node.js app and the Cordova app.
-const cordova = require('cordova-bridge')
+const cordova = require('./cordova-bridge')
 const mkdirp = require('mkdirp')
 //const { identity } = require('lodash')
 const Debug = require('./debug')
@@ -89,7 +89,7 @@ async function main(channel){
 
   cordova.app.on('pause', (pauseLock) => {
     debug.debug('app paused.');
-    pauseLock.release();
+    //pauseLock.release();
   })
 
   cordova.app.on('resume', () => {

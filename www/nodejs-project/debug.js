@@ -1,6 +1,6 @@
 let Dbg = require('debug')
 
-Dbg.enable('*')
+//Dbg.enable('*')
 
 module.exports = class Debug{
   constructor(cordova, name){

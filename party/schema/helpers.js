@@ -8,6 +8,8 @@ exports.Location = {
 }
 
 
+
+
 exports.LocationIndexed = {
   lat: {type: Number, index: true},
   lon: {type: Number, index: true}
@@ -94,28 +96,70 @@ exports.BlePacket = {
   }]
 }
 
+exports.GeoBoundsIndexed = {
+  min: exports.LocationIndexed,
+  max: exports.LocationIndexed
+}
+
+exports.TimeBoundsIndexed = {
+  duration: {type: Number, index: true},
+  first: {type: Date, index: true},
+  last: {type: Date, index: true},
+}
+
 exports.BleStationInfo = {
   source: Utils.actor(['ble_source'], {indexId:true}),
   created: Utils.created,
   address: { type: String, maxlength: 20, minlength: 18, index: true},
 
-  duration: {type: Number, index: true},
-  firstseen: {type: Date, index: true},
-  lastseen: {type: Date, index: true},
+  timebounds: exports.TimeBoundsIndexed,
   location: {
     first: exports.LocationIndexed,
     last: exports.LocationIndexed
   },
 
   best: {
-    timestamp: Date,
+    timestamp: {type:Date, index: true},
     rssi: {type: Number, index: true}
   },
 
-  bounds: {
-    min: exports.LocationIndexed,
-    max: exports.LocationIndexed
+  worst: {
+    timestamp: {type:Date, index: true},
+    rssi: {type: Number, index: true}
   },
+
+  geobounds: exports.GeoBoundsIndexed,
 }
 
-exports
+exports.GeoPoint = {
+  time: Date,
+  accuracy: Number,
+  altitude: Number,
+  bearing: Number,
+  latitude: Number,
+  longitude: Number,
+  speed: Number,
+
+  isStationary: Boolean,
+  
+  provider: String,
+  locationProvider: Number,
+  isFromMockProvider: Boolean,
+  mockLocationsEnabled: Boolean,
+}
+
+exports.GeoTrackInfo = {
+  source: Utils.actor(['ble_source'], {indexId:true}),
+  created: Utils.created,
+
+  timebounds: exports.TimeBoundsIndexed,
+
+  location: {
+    first: exports.LocationIndexed,
+    last: exports.LocationIndexed
+  },
+
+  geobounds: exports.GeoBoundsIndexed,
+
+  points: [exports.GeoPoint]
+}

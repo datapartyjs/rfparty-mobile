@@ -13,9 +13,11 @@
     "package": "cordova run android --debug",
     "repackage": "cordova clean android; cordova run android --debug",
     "deploy": "cordova run android --debug",
+    "clean-nodejs": "cd www/nodejs-project && rm -rf node_modules/ && rm package-lock.json",
+    "build-nodejs": "cd www/nodejs-project && npm run build",
     "build-party": "./scripts/build-party.sh",
     "build-dev": "parcel build index.html --no-minify --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html",
-    "build": "npm run build-party; parcel build index.html --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html"
+    "build": "npm run build-party; npm run build-nodejs; parcel build index.html  --no-content-hash --public-url . --dist-dir ./www index.html"
   },
   "author": "Dataparty",
   "license": "Apache-2.0",
@@ -49,7 +51,7 @@
     "stream-browserify": "^3.0.0"
   },
   "dependencies": {
-    "@dataparty/api": "1.2.7",
+    "@dataparty/api": "datapartyjs/dataparty-api#nodejs-bundle",
     "@dataparty/bouncer-model": "1.4.3",
     "csv": "^6.1.5",
     "debug": "^4.3.4",
@@ -60,6 +62,7 @@
     "leaflet": "^1.8.0",
     "lodash": "^4.17.21",
     "lokijs": "^1.5.12",
+    "md5": "^2.3.0",
     "moment": "^2.29.3",
     "moment-timezone": "^0.5.34",
     "xml-js": "^1.6.11"

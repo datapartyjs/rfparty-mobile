@@ -3,7 +3,8 @@
 
 import { last } from 'lodash'
 
-const debug = require('debug')('rfparty')
+const md5 = require('md5')
+const debug = (...args)=>{ console.log('rfparty', ...args) }  // require('debug')('rfparty')
 const Leaflet = require('leaflet')
 const JSON5 = require('json5')
 const Pkg = require('../package.json')
@@ -72,8 +73,10 @@ async function delay(ms=100){
 
 
 export class RFParty extends EventEmitter {
-  constructor(divId) {
+  constructor(divId, party=null) {
     super()
+
+    this.party = party
 
     this.showAllTracks = true
     this.showAwayTracks = false
@@ -137,6 +140,7 @@ export class RFParty extends EventEmitter {
     this.gpxLayer = Leaflet.layerGroup()
     
     this.autoCenter = true
+    this.lastLocation = undefined
 
   }
 
@@ -147,10 +151,93 @@ export class RFParty extends EventEmitter {
       this.center = location
       this.map.setView([ location.latitude, location.longitude], 13)
     }
+
   }
 
-  async start() {
+  async indexDevice(dev){
+
+    if(this.party == null){ return }
+
+    debug('indexDevice -', dev)
+
+    const now = (new Date()).toISOString()
+    const packetHash = md5(dev.advertising.data)
+
+
+    try{
+      let bleAdvDoc = (await this.party.find()
+        .type('ble_adv')
+        .where('address').equals(dev.id.toLowerCase())
+        .where('packet.hash').equals(packetHash)
+        .exec())[0]
+
+      if(!bleAdvDoc){
+        debug('creating - bleAdv')
+
+        bleAdvDoc = await this.party.createDocument('ble_adv', {
+          address: dev.id.toLowerCase(),
+          created: now,
+          packet: {
+            hash: packetHash,
+            base64: dev.advertising.data,
+            seen: []
+          },
+
+          duration: 1,
+          firstseen: now,
+          lastseen: now,
+          location: {
+            first: this.lastLocation,
+            last: this.lastLocation
+          },
+        
+          best: {
+            timestamp: now,
+            rssi: dev.rssi
+          },
+        
+          bounds: {
+            min: this.lastLocation,
+            max: this.lastLocation
+          }
+        })
+
+        debug('created - bleAdv', bleAdvDoc.data)
+      }
+      else{
+        debug('found - bleAdv', bleAdvDoc.data)
+
+        bleAdvDoc.data.lastseen = now
+        bleAdvDoc.data.location.last = this.lastLocation
+      }
+
+      debug('updating - bleAdv', bleAdvDoc.data)
+      if(!bleAdvDoc.data.packet.seen){
+        bleAdvDoc.data.packet.seen=[]
+      }
+
+      bleAdvDoc.data.packet.seen.push({
+        rssi: dev.rssi,
+        timestamp: (new Date()).toISOString(),
+        location: this.lastLocation
+      })
+
+
+      await bleAdvDoc.save()
+    }
+    catch(err){
+      debug('failed to index', dev)
+
+      debug(err)
+    }
+
+    
+  }
+
+  async start(party) {
     console.log('starting')
+
+    this.party = party
     
     if(this.showAllTracks){
     

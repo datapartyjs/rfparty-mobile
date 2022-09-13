@@ -6,7 +6,8 @@ import {LoadingProgress} from './loading-progress'
 import { stringify } from 'json5'
 
 import { GapParser } from './gap-parser'
-
+const Loki = require('lokijs')
+const LokiIndexAdapter = require('lokijs/src/loki-indexed-adapter')
 //const debug = require('debug')('MainWindow')
 const moment = require('moment')
 
@@ -57,6 +58,7 @@ const SearchSuggestions = {
 window.lastScanStart = moment().subtract(10, 'minutes')
 window.isScanning = false
 
+window.locations = []
 window.advertisements = {}
 window.seen_macs = {}
 
@@ -200,24 +202,7 @@ export class MainWindow {
 
     await MainWindow.setupSession()
 
-    /*let setupPromise = new Promise((resolve,reject)=>{
-      setTimeout(()=>{
-        try{
-          //resolve()
-          resolve(MainWindow.setupSession())
-        }
-        catch(err){
-          reject(err)
-        }
-
-        MainWindow.hideDiv('logo')
-        MainWindow.closeLoading()
-
-      }, 1500)
-    })*/
-
-    //await setupPromise
-    //MainWindow.closeLoading()
+    MainWindow.closeLoading()
   }
 
   static async delay(ms=100){
@@ -231,10 +216,12 @@ export class MainWindow {
 
     window.rfparty.indexLocation(location)
 
+    window.locations.push(location)
+
     MainWindow.scanLoop()
   }
 
-  static onBleDevice(dev){
+  static async onBleDevice(dev){
     debug('device', dev)
 
     /*navigator.geolocation.getCurrentPosition(MainWindow.onLocation, console.error, {
@@ -245,13 +232,17 @@ export class MainWindow {
 
     if(!window.seen_macs[dev.id]){
       window.seen_macs[dev.id] = 0
-      window.loadingState.startStep('dev '+dev.id, 100)
+      //window.loadingState.startStep('dev '+dev.id, 100)
     }
+
+    await window.rfparty.indexDevice(dev)
 
     window.seen_macs[dev.id]++
     window.advertisements[dev.id] =  { ...dev }
 
-    window.loadingState.completePart('dev '+dev.id)
+    //window.loadingState.completePart('dev '+dev.id)
+
+    await MainWindow.scanLoop()
   }
 
   static get Permissions(){
@@ -430,7 +421,7 @@ export class MainWindow {
 
       if(cordova.plugins.backgroundMode.isActive() /*&& await MainWindow.isScreenOff()*/){
 
-        console.log('\t scanLoop - WAKE UP')
+        console.log('\t scanLoop - WAKE UP - ', moment().format())
         cordova.plugins.backgroundMode.wakeUp()
       }
 
@@ -441,11 +432,40 @@ export class MainWindow {
     }
     else{
       console.log('scanLoop - ble not enabled')
+
+      window.isScanning = false
     }
+
+    setTimeout(MainWindow.scanLoop, 10000)
+  }
+
+  static IndexedDb(){
+    return LokiIndexAdapter
   }
 
   static async setupDb(channel){
-    let config = new Dataparty.Config.LocalStorageConfig({basePath:'rfparty'})
+    let config = new Dataparty.Config.LocalStorageConfig({basePath:'rfparty-config'})
+
+    /*
+    let idbAdapter = new LokiIndexAdapter('rfparty')
+
+    //let adapter = new Loki.LokiPartitioningAdapter(idbAdapter, { paging: true });
+
+    
+    let party = new Dataparty.LokiParty({
+      path: 'rfparty-db',
+      dbAdapter: new Loki.LokiLocalStorageAdapter(),
+      model: RFPartyModel,
+      config: config
+    })
+
+    await party.start()
+
+    await window.rfparty.start(party)
+    */
+
+
+
 
     let comms = new Dataparty.Comms.LoopbackComms({
       channel: channel
@@ -456,7 +476,6 @@ export class MainWindow {
       model: RFPartyModel,
       config: config
     })
-  
   
   
     window.loadingState.startStep('start db thread')
@@ -492,7 +511,7 @@ export class MainWindow {
     console.log('authorized to party 😎')
     window.loadingState.completeStep('authorized to party 😎')
 
-    return peer
+    await window.rfparty.start(peer)
   }
 
   static checkGeoLocation(){
@@ -518,12 +537,12 @@ export class MainWindow {
       maxLocations: 30,
       locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-      stationaryRadius: 50,
-      distanceFilter: 5,
-      //notificationTitle: 'Rfparty in background',
+      stationaryRadius: 5,
+      distanceFilter: 1,
+      notificationTitle: 'rfparty',
       notificationText: 'partying in background',
       debug: false,
-      interval: 15000,
+      interval: 30000,
       fastestInterval: 5000,
       activitiesInterval: 10000,
     })
@@ -608,6 +627,10 @@ export class MainWindow {
     await MainWindow.waitForHardware()
     window.loadingState.completeStep('please enable location')
 
+    window.loadingState.startStep('configure db')
+    await MainWindow.setupDb(channel)
+    window.loadingState.completeStep('configure db')
+
     window.loadingState.startStep('configure hardware')
     await MainWindow.scanLoop()
 
@@ -633,9 +656,7 @@ export class MainWindow {
     
     window.loadingState.completeStep('configure hardware')
 
-    window.loadingState.startStep('configure db')
-    await MainWindow.setupDb(channel)
-    window.loadingState.completeStep('configure db')
+
 
 
     let searchElem = document.getElementById('search-input')
@@ -717,9 +738,9 @@ export class MainWindow {
 
     })
 
-    MainWindow.delay(1000)
+    await MainWindow.delay(10000) 
 
-    await window.rfparty.start()
+    MainWindow.closeLoading()
   }
 
   static searchSuggestion(input){

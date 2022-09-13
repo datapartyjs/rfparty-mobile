@@ -11,6 +11,8 @@ class RfpartyService extends Dataparty.IService {
     this.addSchema(Path.join(__dirname, './schema/ble_station.js'))
     this.addSchema(Path.join(__dirname, './schema/ble_source.js'))
 
+    this.addSchema(Path.join(__dirname, './schema/geo_track.js'))
+
   }
 
 }
