@@ -171,7 +171,7 @@ export class RFParty extends EventEmitter {
     debug('indexDevice -', dev)
 
     let device = await RFPartyDocuments.ble_adv.indexBleDevice(this.party, dev, this.lastLocation)
-    let station = await RFPartyDocuments.ble_station.indexBleStation(device)
+    let station = await RFPartyDocuments.ble_station.indexBleStation(this.party, device)
   }
 
   async start(party) {
