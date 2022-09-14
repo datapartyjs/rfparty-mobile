@@ -28,7 +28,7 @@ const TILE_SERVER_LIGHT = 'https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{
 
 const TILE_SERVER_MAPBOX = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}'
 const TILE_SERVER_MAPBOX_CONFIG = {
-  //attribution: '<span id="map-attribution" class="map-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></span>',
+    attribution: '',
     maxZoom: 20,
     id: 'mapbox/dark-v10',
     tileSize: 512,
@@ -156,8 +156,8 @@ export class RFParty extends EventEmitter {
     }
 
     this.lastLocation = {
-      lat: location.latitude,
-      lon: location.longitude
+      latitude: location.latitude,
+      longitude: location.longitude
     }
 
     let track = await RFPartyDocuments.geo_track.indexGeoPoint(this.party, location)
@@ -171,80 +171,6 @@ export class RFParty extends EventEmitter {
     debug('indexDevice -', dev)
 
     let device = await RFPartyDocuments.ble_adv.indexBleDevice(this.party, dev, this.lastLocation)
-
-    /*
-    const now = moment().valueOf()
-    const packetHash = md5(dev.advertising.data)
-
-
-    try{
-      let bleAdvDoc = (await this.party.find()
-        .type('ble_adv')
-        .where('address').equals(dev.id.toLowerCase())
-        .where('packet.hash').equals(packetHash)
-        .exec())[0]
-
-      if(!bleAdvDoc){
-        debug('creating - bleAdv')
-
-        bleAdvDoc = await this.party.createDocument('ble_adv', {
-          address: dev.id.toLowerCase(),
-          created: now,
-          packet: {
-            hash: packetHash,
-            base64: dev.advertising.data,
-            seen: []
-          },
-
-          duration: 1,
-          firstseen: now,
-          lastseen: now,
-          location: {
-            first: this.lastLocation,
-            last: this.lastLocation
-          },
-        
-          best: {
-            time: now,
-            rssi: dev.rssi
-          },
-        
-          bounds: {
-            min: this.lastLocation,
-            max: this.lastLocation
-          }
-        })
-
-        //debug('created - bleAdv', bleAdvDoc.data)
-      }
-      else{
-        debug('found - bleAdv', bleAdvDoc.data)
-
-        bleAdvDoc.data.lastseen = now
-        bleAdvDoc.data.duration = moment(now).diff( moment(bleAdvDoc.data.firstseen), 'ms')
-        bleAdvDoc.data.location.last = this.lastLocation
-      }
-
-      //debug('updating - bleAdv', bleAdvDoc.data)
-      if(!bleAdvDoc.data.packet.seen){
-        bleAdvDoc.data.packet.seen=[]
-      }
-
-      bleAdvDoc.data.packet.seen.push({
-        rssi: dev.rssi,
-        time: now,
-        location: this.lastLocation
-      })
-
-
-      await bleAdvDoc.save()
-    }
-    catch(err){
-      debug('failed to index', dev)
-
-      debug(err)
-    }
-*/
     
   }
 

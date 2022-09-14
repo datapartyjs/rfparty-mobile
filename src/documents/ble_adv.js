@@ -78,6 +78,10 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
       time: now
     }
 
+    const loc = {
+      lat: point.latitude, lon: point.longitude
+    }
+
 
     return await party.createDocument('ble_adv', {
       address: dev.id.toLowerCase(),
@@ -93,8 +97,8 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
         last: now
       },
       location: {
-        first: point,
-        last: point
+        first: loc,
+        last: loc
       },
     
       best: {
@@ -108,8 +112,8 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
       },
     
       geobounds: {
-        min: point,
-        max: point
+        min: loc,
+        max: loc
       }
     })
   }
