@@ -31,14 +31,13 @@ module.exports = class GeoTrackDocument extends Dataparty.IDocument {
       debug('created', track)
 
       await track.save()
-
       return
     }
 
     debug('indexGeoPoint', track)
 
     track.data.points.push(point)
-    track.data.geobounds = GeoUtils.updatGoeBoundsByPoint(track.data.geobounds, point)
+    track.data.geobounds = GeoUtils.updatGeoBoundsByPoint(track.data.geobounds, point)
     track.data.location = GeoUtils.updateLocation(track.data.location, point)
     track.data.timebounds = GeoUtils.updateTimebounds(track.data.timebounds, point.time)
 

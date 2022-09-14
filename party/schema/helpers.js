@@ -132,7 +132,6 @@ exports.BleStationInfo = {
     time: {type:Number, index: true},
     rssi: {type: Number, index: true}
   }
-
 }
 
 exports.GeoPoint = {

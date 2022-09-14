@@ -1,6 +1,8 @@
 const moment = require('moment')
 
-exports.updatGoeBoundsByPoint = (bounds, point)=>{
+exports.updatGeoBoundsByPoint = (bounds, point)=>{
+
+  if(!point){ return bounds }
 
   return {
     min: {
@@ -48,6 +50,9 @@ exports.updateTimebounds = (bounds, time)=>{
 }
 
 exports.updateLocation = (location, point)=>{
+
+  if(!point){ return location }
+
   return {
     first: location.first,
     last: {
@@ -55,4 +60,12 @@ exports.updateLocation = (location, point)=>{
       lon: point.longitude
     }
   }
+}
+
+exports.updateBestRssi = (best, current)=>{
+  return best.rssi > current.rssi ? best : current
+}
+
+exports.updateWorstRssi = (worst, current)=>{
+  return worst.rssi < current.rssi ? worst : current
 }

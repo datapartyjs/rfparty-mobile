@@ -39,6 +39,9 @@ async function main(channel){
     debug.debug('config location: ' + configPath)
 
 
+    /*channel.on('debug-settings', (settings)=>{
+      debug.debug('applying global debug settings - ', settings)
+    })*/
 
     
     debug.debug('config start')

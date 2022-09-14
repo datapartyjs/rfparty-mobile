@@ -3,7 +3,7 @@
 
 import { last } from 'lodash'
 
-const md5 = require('md5')
+
 const debug = /*(...args)=>{ debug('rfparty', ...args) }*/  require('debug')('rfparty')
 const Leaflet = require('leaflet')
 const JSON5 = require('json5')
@@ -155,6 +155,11 @@ export class RFParty extends EventEmitter {
       this.map.setView([ location.latitude, location.longitude], 13)
     }
 
+    this.lastLocation = {
+      lat: location.latitude,
+      lon: location.longitude
+    }
+
     let track = await RFPartyDocuments.geo_track.indexGeoPoint(this.party, location)
 
   }
@@ -165,6 +170,9 @@ export class RFParty extends EventEmitter {
 
     debug('indexDevice -', dev)
 
+    let device = await RFPartyDocuments.ble_adv.indexBleDevice(this.party, dev, this.lastLocation)
+
+    /*
     const now = moment().valueOf()
     const packetHash = md5(dev.advertising.data)
 
@@ -236,7 +244,7 @@ export class RFParty extends EventEmitter {
 
       debug(err)
     }
-
+*/
     
   }
 
