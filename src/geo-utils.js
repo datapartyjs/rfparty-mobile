@@ -16,6 +16,22 @@ exports.updatGeoBoundsByPoint = (bounds, point)=>{
   }
 }
 
+exports.updatGeoBoundsByGeoBounds = (bounds, otherBounds)=>{
+
+  if(!otherBounds){ return bounds }
+
+  return {
+    min: {
+      lat: otherBounds.min.lat < bounds.min.lat ? otherBounds.min.lat : bounds.min.lat,
+      lon: otherBounds.min.lon < bounds.min.lon ? otherBounds.min.lon : bounds.min.lon
+    },
+    max: {
+      lat: otherBounds.max.lat > bounds.max.lat ? otherBounds.max.lat : bounds.max.lat,
+      lon: otherBounds.max.lon > bounds.max.lon ? otherBounds.max.lon : bounds.max.lon
+    }
+  }
+}
+
 exports.updateTimebounds = (bounds, time)=>{
 
   let retVal = {...bounds}

@@ -34,6 +34,7 @@ exports.BleParsedAdv = {
   mtu: Number,
   addressType: String,
   connectable: Boolean,
+  gap: Object,
   services: [String],
   unknownServices: [String],
   product: {type: String, index: true},
@@ -94,8 +95,7 @@ exports.BlePacket = {
   parsed: exports.BleParsedAdv,
   seen: [{
     rssi: Number,
-    time: Utils.created,
-    //location: exports.Location
+    time: Utils.created
   }]
 }
 
@@ -104,10 +104,16 @@ exports.GeoBoundsIndexed = {
   max: exports.LocationIndexed
 }
 
+exports.LocationBoundsIndexed = {
+  first: exports.LocationIndexed,
+  last: exports.LocationIndexed,
+  distance: {type: Number, index: true}
+}
+
 exports.TimeBoundsIndexed = {
   duration: {type: Number, index: true},
   first: {type: Number, index: true},
-  last: {type: Number, index: true},
+  last: {type: Number, index: true}
 }
 
 exports.BleStationInfo = {
@@ -116,15 +122,12 @@ exports.BleStationInfo = {
   address: { type: String, maxlength: 20, minlength: 18, index: true},
 
   timebounds: exports.TimeBoundsIndexed,
-  location: {
-    first: exports.LocationIndexed,
-    last: exports.LocationIndexed
-  },
+  location: exports.LocationBoundsIndexed,
   
   geobounds: exports.GeoBoundsIndexed,
 
   best: {
-    time: {type:Number, index: true},
+    time: {type: Number, index: true},
     rssi: {type: Number, index: true}
   },
 
@@ -157,10 +160,7 @@ exports.GeoTrackInfo = {
 
   timebounds: exports.TimeBoundsIndexed,
 
-  location: {
-    first: exports.LocationIndexed,
-    last: exports.LocationIndexed
-  },
+  location: exports.LocationBoundsIndexed,
 
   geobounds: exports.GeoBoundsIndexed,
 
