@@ -25,7 +25,7 @@ module.exports = class BleStationDocument extends Dataparty.IDocument {
     let bleStationDoc = stations[0]
 
     if(!bleStationDoc){
-      bleStationDoc = await BleAdvDocument.createFromBleAdv(party, bleAdv)
+      bleStationDoc = await BleStationDocument.createFromBleAdv(party, bleAdv)
       debug('created', bleStationDoc.data)
 
       await bleStationDoc.save()
@@ -61,7 +61,7 @@ module.exports = class BleStationDocument extends Dataparty.IDocument {
     const now = moment().valueOf()
 
     return await party.createDocument('ble_station', {
-      address: dev.id.toLowerCase(),
+      address: bleAdv.data.address.toLowerCase(),
       created: now,
 
       timebounds: bleAdv.data.timebounds,

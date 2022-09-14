@@ -37,6 +37,7 @@ exports.BleParsedAdv = {
   gap: Object,
   services: [String],
   unknownServices: [String],
+  hasUnknownService: Boolean,
   product: {type: String, index: true},
   company: {type: String, index: true},
   companyCode: Utils.string(2,2),

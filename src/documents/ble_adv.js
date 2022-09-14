@@ -36,7 +36,7 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
 
       await bleAdvDoc.save()
 
-      return
+      return bleAdvDoc
     }
 
     debug('indexBleDevice', bleAdvDoc.data)
