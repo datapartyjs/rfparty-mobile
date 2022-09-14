@@ -151,10 +151,12 @@ export class RFParty extends EventEmitter {
     //Update if we don't have a center or accuracy improves and autocenter is turned-on
     if( !this.center || (this.autoCenter && (this.center.accuracy > location.accuracy) )){
       this.center = location
+      debug('update view center')
       this.map.setView([ location.latitude, location.longitude], 13)
     }
 
-    await RFPartyDocuments.geo_track.indexGeoPoint(this.party, location)
+    let track = await RFPartyDocuments.geo_track.indexGeoPoint(this.party, location)
+
   }
 
   async indexDevice(dev){
@@ -205,7 +207,7 @@ export class RFParty extends EventEmitter {
           }
         })
 
-        debug('created - bleAdv', bleAdvDoc.data)
+        //debug('created - bleAdv', bleAdvDoc.data)
       }
       else{
         debug('found - bleAdv', bleAdvDoc.data)
@@ -215,7 +217,7 @@ export class RFParty extends EventEmitter {
         bleAdvDoc.data.location.last = this.lastLocation
       }
 
-      debug('updating - bleAdv', bleAdvDoc.data)
+      //debug('updating - bleAdv', bleAdvDoc.data)
       if(!bleAdvDoc.data.packet.seen){
         bleAdvDoc.data.packet.seen=[]
       }

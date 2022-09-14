@@ -19,8 +19,8 @@ module.exports = class GeoTrackDocument extends Dataparty.IDocument {
 
     let tracks = (await party.find()
       .type('geo_track')
-      .where('timebound.first').gt(prev24.valueOf())
-      //.sort('-timebound.first')
+      .where('timebounds.first').gt(prev24.valueOf())
+      .sort('-timebounds.first')
       .exec())
 
     let track = tracks[0]
@@ -29,6 +29,8 @@ module.exports = class GeoTrackDocument extends Dataparty.IDocument {
       debug('found tracks', tracks)
       track = await GeoTrackDocument.createFromGeoPoint(party, point)
       debug('created', track)
+
+      await track.save()
 
       return
     }
