@@ -13,6 +13,7 @@ const reach = require('./reach')
 const Loki = require('lokijs')
 const moment = require('moment')
 const EventEmitter = require('last-eventemitter')
+const EarthDistance = require('earth-distance-js')
 
 const RFPartyDocuments = require('./documents')
 
@@ -20,7 +21,7 @@ import * as UUID16_TABLES from './16bit-uuid-tables'
 import * as MANUFACTURER_TABLE from './manufacturer-company-id.json' 
 const DeviceIdentifiers = require('./device-identifiers')
 
-const JSONViewer = require('json-viewer-js')
+const JSONViewer = require('json-viewer-js/src/jsonViewer')
 
 const TILE_SERVER_DEFAULT = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const TILE_SERVER_DARK = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
@@ -42,6 +43,13 @@ async function delay(ms=100){
   })
 }
 
+
+function toLoc(location){
+  return {
+    lat: location.latitude || 0,
+    lon: location.longitude || 0
+  }
+}
 
 
 /**
@@ -143,16 +151,31 @@ export class RFParty extends EventEmitter {
     
     this.autoCenter = true
     this.lastLocation = undefined
+    this.packetCount = 0
+    this.stationCount = 0
+    this.locationCount = 0
 
+    this.sessionStartTime = moment()
+
+    this.queryActive = false
   }
+
+
 
   async indexLocation(location){
 
+    let movedDistance = !this.lastLocation ? 0 : EarthDistance.haversine(
+      toLoc(this.lastLocation),
+      toLoc(location)
+    )
+
+    let hasMoved = (movedDistance*1000) > 5
+
     //Update if we don't have a center or accuracy improves and autocenter is turned-on
-    if( !this.center || (this.autoCenter && (this.center.accuracy > location.accuracy) )){
+    if( !this.center || (this.autoCenter && (hasMoved || this.center.accuracy > location.accuracy))){
       this.center = location
       debug('update view center')
-      this.map.setView([ location.latitude, location.longitude], 13)
+      this.map.setView([ location.latitude, location.longitude], 17)
     }
 
     this.lastLocation = {
@@ -161,7 +184,8 @@ export class RFParty extends EventEmitter {
     }
 
     let track = await RFPartyDocuments.geo_track.indexGeoPoint(this.party, location)
-
+    this.locationCount++
+    this.emit('location_count',this.locationCount)
   }
 
   async indexDevice(dev){
@@ -172,6 +196,14 @@ export class RFParty extends EventEmitter {
 
     let device = await RFPartyDocuments.ble_adv.indexBleDevice(this.party, dev, this.lastLocation)
     let station = await RFPartyDocuments.ble_station.indexBleStation(this.party, device)
+
+    if(station.data.timebounds.first == station.data.timebounds.last){
+      this.stationCount++
+      this.emit('station_count', this.stationCount)
+    }
+
+    this.packetCount++
+    this.emit('packet_count', this.packetCount)
   }
 
   async start(party) {
@@ -194,6 +226,17 @@ export class RFParty extends EventEmitter {
   }
 
   async handleSearch(input){
+
+    debug('handleSearch -',input)
+
+    if(this.queryActive || !this.party){
+      debug('ignoring query. one is already in progress -',input)
+      return
+    }
+
+    this.queryActive = true
+
+
     let query = this.party.find().type('ble_station')
     let updateStartTime = new moment()
 
@@ -204,122 +247,132 @@ export class RFParty extends EventEmitter {
       //debug('parsed query', obj)
       //query = obj
     }else{
-      const tokens = input.split(' ')
 
-      let term = tokens.slice(1).join(' ')
-      switch(tokens[0]){
-        case 'mac':
-        case 'address':
-          query = query.where('address').equals(term)   //TODO - needs $contains support
-          break
-        case 'here':
-          let viewport = this.map.getBounds()
-          query = query.or()
-            .and()
-              .where('location.first').exists()
-              //.where('location.last').ne(null)
-              //.where('location.first').ne(null)
-              .where('location.first.lat').exists()
-              .where('location.first.lon').exists()
-              .where('location.first.lat').lt( viewport.getNorth() )
-              .where('location.first.lat').gt( viewport.getSouth() )
-              .where('location.first.lon').lt( viewport.getEast() )
-              .where('location.first.lon').gt( viewport.getWest() )
-            .dna()
-            .and()
-              .where('location.last').exists()
-              //.where('location.last').ne(null)
-              //.where('location.first').ne(null)
-              .where('location.last.lat').exists()
-              .where('location.last.lon').exists()
-              .where('location.last.lat').lt( viewport.getNorth() )
-              .where('location.last.lat').gt( viewport.getSouth() )
-              .where('location.last.lon').lt( viewport.getEast() )
-              .where('location.last.lon').gt( viewport.getWest() )
-          break
-        /*case 'nolocation':
-          query = {'$or': [
-            {'firstlocation': {'$exists': false}},
-            {'lastlocation': {'$exists': false}},
-            {'firstlocation': null },
-            {'lastlocation': null },
-          ]}
-          break*/
-        case 'name':
-        case 'localname':
-          debug('select by name', tokens)
-          query = query.where('summary.name').equals(term)   //TODO - needs $contains support
-          
-          debug('term['+term+']')
-  
-          break
-        case 'company':
-          debug('select by company', tokens)
-          query = query.where('summary.company').equals(term)   //TODO - needs $contains support
-          break
-  
-        case 'product':
-          debug('select by product', tokens)
-          
-          query = query.where('summary.product').equals(term)   //TODO - needs $contains support
-          break
-  
-        case 'unknown':
-        case 'unknown-service':
-          query = where('summary.unknownServices').exists()
-          break
-        case 'service':
-          const serviceTerm = tokens[1]
-          debug('select by service', serviceTerm)
-          let possibleServices = RFParty.reverseLookupService(serviceTerm)
-          debug('possible', possibleServices)
-          /*query = {
-            'services':  {'$containsAny':  possibleServices },
-            ...this.parseServiceSearch(serviceTerm.toLowerCase(), tokens.slice(2))
-          }*/
-          break
-  
-        case 'appleip':
-        case 'appleIp':
-          debug('select by appleIp', tokens)
-          if(tokens.length < 2){
-            query = query.exists('summary.appleContinuity.service.airplay.ip').exists()
-          }
-          else{
-            query = query.exists('summary.appleContinuity.service.airplay.ip').equals(tokens)
-          }
-          break
-  
-        case 'random':
-          query = query.where('summary.addressType').equals('random')
-          break
-        case 'public':
-          query = query.where('summary.addressType').equals('public')
-          break
-        case 'connectable':
-          query = query.where('summary.connectable').equals(true)
-          break
-        case 'duration':
-          if(tokens.length < 2){
+      try{
 
-            query = query.where('timebounds.duration').gt(30*60*1000)
-
-          } else {
-
-            query = query.where('timebounds.duration').gt(moment.duration("PT" + term.toUpperCase()).as('ms') || 30*60000)
-
-          }
-          break
-
-        case 'error':
-          query = query.exists('summary.appleContinuity.lasterror').exists()
-          break
+        const tokens = input.split(' ')
   
-        default:
-          debug('invalid search type', tokens[0])
-          this.emit('search-failed')
-          return
+        let term = tokens.slice(1).join(' ')
+        switch(tokens[0]){
+          case 'mac':
+          case 'address':
+            query = query.where('address').equals(term)   //TODO - needs $contains support
+            break
+          case 'here':
+            let viewport = this.map.getBounds()
+            query = query.or()
+              .and()
+                .where('location.first').exists()
+                //.where('location.last').ne(null)
+                //.where('location.first').ne(null)
+                .where('location.first.lat').exists()
+                .where('location.first.lon').exists()
+                .where('location.first.lat').lt( viewport.getNorth() )
+                .where('location.first.lat').gt( viewport.getSouth() )
+                .where('location.first.lon').lt( viewport.getEast() )
+                .where('location.first.lon').gt( viewport.getWest() )
+              .dna()
+              .and()
+                .where('location.last').exists()
+                //.where('location.last').ne(null)
+                //.where('location.first').ne(null)
+                .where('location.last.lat').exists()
+                .where('location.last.lon').exists()
+                .where('location.last.lat').lt( viewport.getNorth() )
+                .where('location.last.lat').gt( viewport.getSouth() )
+                .where('location.last.lon').lt( viewport.getEast() )
+                .where('location.last.lon').gt( viewport.getWest() )
+            break
+          /*case 'nolocation':
+            query = {'$or': [
+              {'firstlocation': {'$exists': false}},
+              {'lastlocation': {'$exists': false}},
+              {'firstlocation': null },
+              {'lastlocation': null },
+            ]}
+            break*/
+          case 'name':
+          case 'localname':
+            debug('select by name', tokens)
+            query = query.where('summary.name').equals(term)   //TODO - needs $contains support
+            
+            debug('term['+term+']')
+    
+            break
+          case 'company':
+            debug('select by company', tokens)
+            query = query.where('summary.company').equals(term)   //TODO - needs $contains support
+            break
+    
+          case 'product':
+            debug('select by product', tokens)
+            
+            query = query.where('summary.product').equals(term)   //TODO - needs $contains support
+            break
+    
+          case 'unknown':
+          case 'unknown-service':
+            query = where('summary.unknownServices').exists()
+            break
+          case 'service':
+            const serviceTerm = tokens[1]
+            debug('select by service', serviceTerm)
+            let possibleServices = RFParty.reverseLookupService(serviceTerm)
+            debug('possible', possibleServices)
+            /*query = {
+              'services':  {'$containsAny':  possibleServices },
+              ...this.parseServiceSearch(serviceTerm.toLowerCase(), tokens.slice(2))
+            }*/
+            break
+    
+          case 'appleip':
+          case 'appleIp':
+            debug('select by appleIp', tokens)
+            if(tokens.length < 2){
+              query = query.exists('summary.appleContinuity.service.airplay.ip').exists()
+            }
+            else{
+              query = query.exists('summary.appleContinuity.service.airplay.ip').equals(tokens)
+            }
+            break
+    
+          case 'random':
+            query = query.where('summary.addressType').equals('random')
+            break
+          case 'public':
+            query = query.where('summary.addressType').equals('public')
+            break
+          case 'connectable':
+            query = query.where('summary.connectable').equals(true)
+            break
+          case 'duration':
+            if(tokens.length < 2){
+  
+              query = query.where('timebounds.duration').gt(30*60*1000)
+  
+            } else {
+  
+              query = query.where('timebounds.duration').gt(moment.duration("PT" + term.toUpperCase()).as('ms') || 30*60000)
+  
+            }
+            break
+  
+          case 'error':
+            query = query.exists('summary.appleContinuity.lasterror').exists()
+            break
+    
+          default:
+            debug('invalid search type', tokens[0])
+            this.emit('search-failed')
+            this.queryActive = false
+            return
+        }
+      } catch (er) {
+        debug('error constructing query')
+        this.queryActive = false
+        return
       }
+
     }
 
     if(!query){ 
@@ -327,10 +380,17 @@ export class RFParty extends EventEmitter {
       let updateDuration = updateEndTime.diff(updateStartTime)
       this.emit('update-finished', {query: this.lastQuery, updateDuration, render: this.lastRender})
 
+      this.queryActive = false
       return
     }
 
-    await this.doQuery(query, updateStartTime)
+    try{
+      await this.doQuery(query, updateStartTime)
+    }
+    catch(err){
+      debug('query error', err)
+    }
+    this.queryActive = false
   }
 
   async doQuery(query, updateStartTime=new moment()){
@@ -495,7 +555,7 @@ export class RFParty extends EventEmitter {
   }
 
   async getBLEDevice(mac){
-    let station = (await this.party.find().type('ble_station')
+    let station = (await this.party.find().type('ble_adv')
       .where('address').equals(mac)
       .exec())[0]
 
@@ -601,7 +661,7 @@ export class RFParty extends EventEmitter {
 
       this.detailsViewer = new JSONViewer({
         container: details,
-        data: JSON.stringify(device.cleanData),
+        data: JSON.stringify(device.cleanData.packet),
         theme: 'dark',
         expand: false
       })
@@ -701,16 +761,19 @@ export class RFParty extends EventEmitter {
   async getTrackPointByTime(timestamp) {
     let bestDeltaMs = null
     let bestPoint = null
-    let track = await this.getTracksByTime(timestamp - 1200000, timestamp + 6000)
+    let tracks = await this.getTracksByTime(timestamp - 1200000, timestamp + 6000)
 
-    for (let point of track) {
-      let deltaMs = Math.abs(moment(point.timestamp).diff(track.timestamp))
-
-      if (deltaMs < bestDeltaMs || bestDeltaMs == null) {
-        bestDeltaMs = deltaMs
-        bestPoint = point
+    for(let track of tracks){
+      for (let point of track) {
+        let deltaMs = Math.abs(moment(point.timestamp).diff(track.timestamp))
+  
+        if (deltaMs < bestDeltaMs || bestDeltaMs == null) {
+          bestDeltaMs = deltaMs
+          bestPoint = point
+        }
       }
     }
+
 
     if(bestPoint){
       bestPoint = {

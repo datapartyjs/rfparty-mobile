@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "mv ../../moved_node_modules node_modules;  npm i",
+    "clean": "mv ../../moved_node_modules node_modules; rm -rf node_modules/@dataparty/api; rm package-lock.json;  npm i",
     "build": "mv ../../moved_node_modules node_modules; cp node_modules/@dataparty/api/dist/dataparty-embedded.js dist;  rm -rf .parcel-cache; mv node_modules ../../moved_node_modules"
   },
   "author": "Dataparty DAO",

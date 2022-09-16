@@ -61,7 +61,8 @@ async function main(channel){
       path: dbPath,
       noCache: true,
       model: RFPartyModel,
-      config: config
+      config: config,
+      qbOptions: {debounce: false, find_dedup:true, timeout: 30000}
     })
 
   
@@ -112,6 +113,13 @@ async function main(channel){
   debug.debug('waiting to party...')
   await peer.comms.authorized()
   debug.debug('authorized to party 😎')
+
+  let handleError = (...err)=>{
+    cordova.channel.send('error', err)
+  }
+
+  process.on('unhandledRejection', handleError)
+  process.on('uncaughtException', handleError)
 
   /*await new Promise((resolve,reject)=>{
     console.log('for ever')

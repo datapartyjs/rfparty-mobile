@@ -30,7 +30,7 @@ module.exports = class BleStationDocument extends Dataparty.IDocument {
 
       await bleStationDoc.save()
 
-      return
+      return bleStationDoc
     }
 
     debug('indexBleStation', bleStationDoc.data)

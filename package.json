@@ -55,6 +55,7 @@
     "@dataparty/bouncer-model": "1.4.3",
     "csv": "^6.1.5",
     "debug": "^4.3.4",
+    "earth-distance-js": "^1.4.1",
     "json-viewer-js": "^1.0.8",
     "json5": "^2.2.1",
     "jsonpath-plus": "^7.0.0",

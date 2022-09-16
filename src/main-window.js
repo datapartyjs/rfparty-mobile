@@ -69,6 +69,8 @@ window.locations = []
 window.advertisements = {}
 window.seen_macs = {}
 
+window.status_text = ''
+
 window.printBle = function (){
 
 
@@ -439,6 +441,14 @@ export class MainWindow {
       window.lastScanStart = now
 
       MainWindow.checkGeoLocation()
+      setTimeout(MainWindow.scanLoop, MainWindow.scanWindow)
+
+      BackgroundGeolocation.configure({
+        notificationTitle: 'rfparty ('+window.status_text+')',
+        notificationText: 'partying in background',
+      })
+
+      return
     }
     else{
       debug('scanLoop - ble not enabled')
@@ -483,10 +493,11 @@ export class MainWindow {
   
     let peer = new Dataparty.PeerParty({
       comms: comms,
-      noCache: true,
+      noCache: false,
       model: RFPartyModel,
       factories: RFPartyDocuments,
-      config: config
+      config: config,
+      qbOptions: {debounce: 100, find_dedup:true, timeout: 30000}
     })
   
   
@@ -684,6 +695,37 @@ export class MainWindow {
 
     searchElem.disabled = false
 
+    window.rfparty.on('station_count', count=>{
+
+      let locationCount = window.rfparty.locationCount
+      let stationCount = window.rfparty.stationCount
+      let packetCount = window.rfparty.packetCount
+
+      window.status_text = '📨' + packetCount + '🛰️'+ stationCount +'📍'+locationCount
+      MainWindow.setConnectionStatus(window.status_text, 'green')
+
+    })
+
+    window.rfparty.on('packet_count', count=>{
+
+      let locationCount = window.rfparty.locationCount
+      let stationCount = window.rfparty.stationCount
+      let packetCount = window.rfparty.packetCount
+
+      window.status_text = '📨' + packetCount + '🛰️'+ stationCount +'📍'+locationCount
+      MainWindow.setConnectionStatus(window.status_text, 'limegreen')
+    })
+
+    window.rfparty.on('location_count', count=>{
+
+      let locationCount = window.rfparty.locationCount
+      let stationCount = window.rfparty.stationCount
+      let packetCount = window.rfparty.packetCount
+
+      window.status_text = '📨' + packetCount + '🛰️'+ stationCount +'📍'+locationCount
+      MainWindow.setConnectionStatus(window.status_text, 'blue')
+    })
+
     window.rfparty.on('update-start', ()=>{
       window.MainWindow.hideDiv('search-hint')
       searchStatusElem.innerText = 'updating . . .'
@@ -695,6 +737,8 @@ export class MainWindow {
       searchStatusElem.innerText = 'querying . . .'
       window.MainWindow.showDiv('search-status')
     })
+
+
 
     window.rfparty.on('search-finished', (data)=>{
       window.MainWindow.hideDiv('search-hint')
@@ -790,5 +834,14 @@ export class MainWindow {
     }
 
     return suggestions
+  }
+
+  static setConnectionStatus(text, color){
+    const statusText = document.getElementById('status-text')
+    statusText.textContent = text+' '
+  
+    const statusDot = document.getElementById('status-dot')
+    statusDot.style.color = color
+    statusDot.style.backgroundColor = color
   }
 }
