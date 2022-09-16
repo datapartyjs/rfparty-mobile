@@ -35,13 +35,13 @@ module.exports = class BleStationDocument extends Dataparty.IDocument {
 
     debug('indexBleStation', bleStationDoc.data)
 
-    const lastLoc = {
+    const lastLoc = !bleAdv.data.location.last ? undefined : {
       latitude: bleAdv.data.location.last.lat,
       longitude: bleAdv.data.location.last.lon
     }
 
     bleStationDoc.data.geobounds = GeoUtils.updatGeoBoundsByGeoBounds(bleStationDoc.data.geobounds, bleAdv.data.geobounds)
-    bleStationDoc.data.location = GeoUtils.updateLocation(bleStationDoc.data.location, lastLoc)
+    bleStationDoc.data.location = GeoUtils.updateLocationBounds(bleStationDoc.data.location, lastLoc)
     bleStationDoc.data.timebounds = GeoUtils.updateTimebounds(bleStationDoc.data.timebounds, bleAdv.data.timebounds.last)
     bleStationDoc.data.best = GeoUtils.updateBestRssi(bleStationDoc.data.best, bleAdv.data.best)
     bleStationDoc.data.worst = GeoUtils.updateWorstRssi(bleStationDoc.data.worst, bleAdv.data.worst)

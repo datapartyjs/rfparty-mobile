@@ -38,7 +38,7 @@ module.exports = class GeoTrackDocument extends Dataparty.IDocument {
 
     track.data.points.push(point)
     track.data.geobounds = GeoUtils.updatGeoBoundsByPoint(track.data.geobounds, point)
-    track.data.location = GeoUtils.updateLocation(track.data.location, point)
+    track.data.location = GeoUtils.updateLocationBounds(track.data.location, point)
     track.data.timebounds = GeoUtils.updateTimebounds(track.data.timebounds, point.time)
 
     await track.save()

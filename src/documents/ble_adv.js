@@ -55,7 +55,7 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
 
 
     bleAdvDoc.data.geobounds = GeoUtils.updatGeoBoundsByPoint(bleAdvDoc.data.geobounds, point)
-    bleAdvDoc.data.location = GeoUtils.updateLocation(bleAdvDoc.data.location, point)
+    bleAdvDoc.data.location = GeoUtils.updateLocationBounds(bleAdvDoc.data.location, point)
     bleAdvDoc.data.timebounds = GeoUtils.updateTimebounds(bleAdvDoc.data.timebounds, now)
     bleAdvDoc.data.best = GeoUtils.updateBestRssi(bleAdvDoc.data.best, currentRssi)
     bleAdvDoc.data.worst = GeoUtils.updateWorstRssi(bleAdvDoc.data.worst, currentRssi)
@@ -78,8 +78,9 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
       time: now
     }
 
-    const loc = {
-      lat: point.latitude, lon: point.longitude
+    const loc = !point ? undefined : {
+      lat: point.latitude,
+      lon: point.longitude
     }
 
 

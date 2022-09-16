@@ -27,6 +27,11 @@ const RFPartyDocuments = require('./documents')
   debug('MainWindow -', ...args)
 }*/
 
+window.last_crash_count = parseInt( localStorage.getItem('crash_count') ) || 0
+window.crash_count = parseInt( localStorage.getItem('crash_count') ) || 0
+
+
+
 const byteToHex = [];
 for(let n=0; n<0xff; ++n){
   const hexOctet = n.toString(16).padStart(2, '0')
@@ -497,7 +502,7 @@ export class MainWindow {
       model: RFPartyModel,
       factories: RFPartyDocuments,
       config: config,
-      qbOptions: {debounce: 100, find_dedup:true, timeout: 30000}
+      qbOptions: {debounce: false, find_dedup: true, timeout: false}
     })
   
   
@@ -567,7 +572,7 @@ export class MainWindow {
       notificationText: 'partying in background',
       debug: false,
       interval: 30000,
-      fastestInterval: 5000,
+      fastestInterval: 1000,
       activitiesInterval: 10000,
     })
 
@@ -621,11 +626,34 @@ export class MainWindow {
     //BackgroundGeolocation.start()
   }
 
+  static updateStatus(){
+    
+
+    let locationCount = window.rfparty.locationCount
+    let stationCount = window.rfparty.stationCount
+    let packetCount = window.rfparty.packetCount
+
+    window.status_text = '📨' + packetCount + ' 🛰️'+ stationCount +' 📍'+locationCount
+
+    if(window.crash_count > window.last_crash_count){
+      const crashes = window.crash_count - window.last_crash_count
+      window.status_text = '⚠️' + crashes +' ' + window.status_text
+    }
+
+    let pending = Object.keys(window.rfparty.party.qb.crufls).length
+    if(pending > 0){
+      window.status_text = '⏳' + pending + ' ' + window.status_text
+    }
+
+    MainWindow.setConnectionStatus(window.status_text, 'green')
+  }
+
   static async setupSession(channel){
 
     MainWindow.closeSetupForm()
     MainWindow.openLoading()
 
+    setInterval(MainWindow.updateStatus, 500)
 
 
     cordova.plugins.backgroundMode.setDefaults({
@@ -687,6 +715,58 @@ export class MainWindow {
     window.loadingState.completeStep('configure hardware')
 
 
+    window.rfparty.on('station_count', MainWindow.updateStatus)
+
+    window.rfparty.on('packet_count', MainWindow.updateStatus)
+
+    window.rfparty.on('location_count', MainWindow.updateStatus)
+
+    window.addEventListener("unhandledrejection", function(promiseRejectionEvent) {
+      let reason
+      try{
+        reason = promiseRejectionEvent.reason
+        JSON.stringify(reason) //check we can sting it
+      }catch(err){
+        reason = promiseRejectionEvent.reason.toString()
+      }
+
+        window.crash_count++
+        localStorage.setItem('crash_count', window.crash_count)
+  
+  
+        let event = {
+          rejection: {
+            reason: reason, type: promiseRejectionEvent.type
+          }
+        }
+  
+        console.log(event)
+        console.log(JSON.stringify(event))
+        localStorage.setItem('crash-'+window.crash_count, JSON.stringify(event,null,2))
+  
+        MainWindow.updateStatus()
+      
+    });
+
+    window.onerror = function(message, source, lineNumber, colno, error) {
+      console.warn(`UNHANDLED ERROR: ${error.stack}`);
+
+      let event = {
+        exception: {
+          message, source, lineNumber, colno, error
+        }
+      }
+
+      window.crash_count++
+      localStorage.setItem('crash_count', window.crash_count)
+      console.log(event)
+      console.log(JSON.stringify(event))
+      localStorage.setItem('crash-'+window.crash_count, JSON.stringify(event,null,2))
+
+      MainWindow.updateStatus()
+    }
+
+    MainWindow.updateStatus()
 
 
     let searchElem = document.getElementById('search-input')
@@ -695,36 +775,6 @@ export class MainWindow {
 
     searchElem.disabled = false
 
-    window.rfparty.on('station_count', count=>{
-
-      let locationCount = window.rfparty.locationCount
-      let stationCount = window.rfparty.stationCount
-      let packetCount = window.rfparty.packetCount
-
-      window.status_text = '📨' + packetCount + '🛰️'+ stationCount +'📍'+locationCount
-      MainWindow.setConnectionStatus(window.status_text, 'green')
-
-    })
-
-    window.rfparty.on('packet_count', count=>{
-
-      let locationCount = window.rfparty.locationCount
-      let stationCount = window.rfparty.stationCount
-      let packetCount = window.rfparty.packetCount
-
-      window.status_text = '📨' + packetCount + '🛰️'+ stationCount +'📍'+locationCount
-      MainWindow.setConnectionStatus(window.status_text, 'limegreen')
-    })
-
-    window.rfparty.on('location_count', count=>{
-
-      let locationCount = window.rfparty.locationCount
-      let stationCount = window.rfparty.stationCount
-      let packetCount = window.rfparty.packetCount
-
-      window.status_text = '📨' + packetCount + '🛰️'+ stationCount +'📍'+locationCount
-      MainWindow.setConnectionStatus(window.status_text, 'blue')
-    })
 
     window.rfparty.on('update-start', ()=>{
       window.MainWindow.hideDiv('search-hint')

@@ -104,40 +104,7 @@ export class RFParty extends EventEmitter {
 
     debug('rfparty constructor')
 
-    this.db = new Loki('session')
 
-    // build session db
-
-    this.db.addCollection('locationTrack', {
-      indices: ['timestamp', 'lat', 'lon', 'filename', 'source']
-    })
-
-    this.db.addCollection('homeState', {
-      indices: ['timestamp', 'filename']
-    })
-
-    this.db.addCollection('awayTime', {
-      indices: ['starttime', 'endtime',
-        'bounds.min.x', 'bounds.min.y',
-        'bounds.max.x', 'bounds.max.y'
-      ]
-    })
-
-    this.db.addCollection('ble', {
-      indices: ['firstseen', 'lastseen', 'address', 'duration', 'advertisement.localName',
-        'lastlocation.lat', 'lastlocation.lon',
-        'firstlocation.lat', 'firstlocation.lon',
-        'connectable', 'addressType', 'services', 'hasUnknownService', 'ibeacon.uuid', 'findmy.maintained',
-        'company', 'product', 'companyCode', 'productCode', 'appleContinuityTypeCode', 'appleIp']
-    })
-
-    this.db.addCollection('appleDevices', {
-      indices: ['address', 'continuityCode', 'ip']
-    })
-
-    this.mobileSegments = []
-
-    this.srcs = {}
 
     this.deviceLayers = {}
     this.searchResults = null
@@ -145,9 +112,6 @@ export class RFParty extends EventEmitter {
     this.lastQuery = null
 
     this.scanDb = null
-    this.gpx = {}
-    this.gpxLines = {}
-    this.gpxLayer = Leaflet.layerGroup()
     
     this.autoCenter = true
     this.lastLocation = undefined
@@ -765,7 +729,7 @@ export class RFParty extends EventEmitter {
 
     for(let track of tracks){
       for (let point of track) {
-        let deltaMs = Math.abs(moment(point.timestamp).diff(track.timestamp))
+        let deltaMs = Math.abs(moment(timestamp).diff(track.timestamp))
   
         if (deltaMs < bestDeltaMs || bestDeltaMs == null) {
           bestDeltaMs = deltaMs
