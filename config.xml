@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="xyz.dataparty.rfparty" version="1.0.2"  xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<widget id="xyz.dataparty.rfparty" version="1.0.3"  xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>rfparty</name>
     <description>
     A bluetooth tricorder
@@ -14,7 +14,9 @@
         <!--<preference name="android-compileSdkVersion" value="31" />-->
         <preference name="android-targetSdkVersion" value="31" />
 	<!--<preference name="AndroidXEnabled" value="true" />-->
-	<exclude-files pattern="nodejs-project/node_modules/**/[#]**" />
+  	    <exclude-files pattern="nodejs-project/moved_node_modules/" />
+	      <!--<exclude-files pattern="nodejs-project/node_modules/**/[#]**" />-->
+        <exclude-files pattern="nodejs-project/.parcel-cache/" />
         <icon background="config/icon/android/mipmap-mdpi/ic_launcher_adaptive_back.png" density="mdpi" foreground="config/icon/android/mipmap-mdpi/ic_launcher_adaptive_fore.png" />
         <icon background="config/icon/android/mipmap-hdpi/ic_launcher_adaptive_back.png" density="hdpi" foreground="config/icon/android/mipmap-hdpi/ic_launcher_adaptive_fore.png" />
         <icon background="config/icon/android/mipmap-xhdpi/ic_launcher_adaptive_back.png" density="xhdpi" foreground="config/icon/android/mipmap-xhdpi/ic_launcher_adaptive_fore.png" />

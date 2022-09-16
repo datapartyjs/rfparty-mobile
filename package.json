@@ -1,7 +1,7 @@
 {
   "name": "xyz.dataparty.rfparty",
   "displayName": "rfparty",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A bluetooth tricorder",
   "source": "./index.html",
   "scripts": {
@@ -14,7 +14,7 @@
     "repackage": "cordova clean android; cordova run android --debug",
     "deploy": "killall java; cordova run android --debug",
     "clean-dataparty": "rm -rf node_modules/@dataparty/api; rm package-lock.json",
-    "clean-nodejs": "cd www/nodejs-project && rm -rf node_modules/ && rm package-lock.json",
+    "clean-nodejs": "cd www/nodejs-project && npm run clean",
     "build-nodejs": "cd www/nodejs-project && npm run build",
     "build-party": "./scripts/build-party.sh",
     "build-dev": "parcel build index.html --no-minify --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html",
@@ -42,7 +42,6 @@
     "cordova-plugin-powermanagement-orig": "github:sevenbitbyte/cordova-plugin-powermanagement",
     "cordova.plugins.diagnostic": "^7.1.0",
     "eslint": "8.19.0",
-    "events": "^3.3.0",
     "nodejs-mobile-cordova": "file:../nodejs-mobile-cordova",
     "parcel": "2.6.2",
     "parcel-plugin-clean-dist": "0.0.6",

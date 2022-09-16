@@ -1,7 +1,8 @@
 // Require the 'cordova-bridge' to enable communications between the
 // Node.js app and the Cordova app.
-const cordova = require('./cordova-bridge')
-const mkdirp = require('mkdirp')
+const fs = require('fs')
+const cordova = require('./cordova-bridge.js')
+//const mkdirp = require('mkdirp')
 //const { identity } = require('lodash')
 const Debug = require('./debug')
 let debug = new Debug(cordova, 'rfparty.nodejs')
@@ -9,6 +10,13 @@ let debug = new Debug(cordova, 'rfparty.nodejs')
 let peer = null
 let party = null
 let config = null
+
+function mkdir(dir){
+  try{
+    fs.mkdirSync(dir)
+  }
+  catch(err){}
+}
 
 async function main(channel){
   
@@ -20,7 +28,7 @@ async function main(channel){
 
   try {
     debug.debug('api')
-    const Dataparty = require('@dataparty/api/dist/dataparty.js')
+    const Dataparty = require('./dist/dataparty-embedded.js')
     debug.debug('model')
     const RFPartyModel = require('./party/xyz.dataparty.rfparty.dataparty-schema.json')
 
@@ -33,9 +41,9 @@ async function main(channel){
     const dbPath =  cordova.app.datadir() + '/rfparty-host-tingo'
 
     debug.debug('mkdirp', dbPath)
-    mkdirp.sync(dbPath)
+    mkdir(dbPath)
     debug.debug('db location: ' + dbPath)
-    mkdirp.sync(configPath)
+    mkdir(configPath)
     debug.debug('config location: ' + configPath)
 
 

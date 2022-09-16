@@ -226,6 +226,7 @@ export class RFParty extends EventEmitter {
               .where('location.first.lon').lt( viewport.getEast() )
               .where('location.first.lon').gt( viewport.getWest() )
             .dna()
+            .and()
               .where('location.last').exists()
               //.where('location.last').ne(null)
               //.where('location.first').ne(null)
@@ -594,7 +595,7 @@ export class RFParty extends EventEmitter {
 
       details.textContent = JSON.stringify(device.cleanData,null,2)
 
-      /*while (details.firstChild) { details.removeChild(details.firstChild) }
+      while (details.firstChild) { details.removeChild(details.firstChild) }
 
       debug('details viewer JSON - ', JSON.stringify(device.cleanData))
 
@@ -603,7 +604,7 @@ export class RFParty extends EventEmitter {
         data: JSON.stringify(device.cleanData),
         theme: 'dark',
         expand: false
-      })*/
+      })
       //
 
       //! @todo

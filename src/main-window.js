@@ -491,9 +491,10 @@ export class MainWindow {
   
   
     window.loadingState.startStep('start db thread')
-    debug('starting nodejs')
+    let srcPath = 'main.js'
+    debug('starting nodejs - ', srcPath)
     let nodejsStart = new Promise((resolve, reject)=>{
-      nodejs.start('main.js', (err)=>{
+      nodejs.start(srcPath, (err)=>{
         if(err){
           debug(err)
           reject(err) }
@@ -502,7 +503,7 @@ export class MainWindow {
     })
   
     await nodejsStart
-    debug ('nodejs Mobile Engine Started')
+    debug ('nodejs started')
     window.loadingState.completeStep('start db thread')
   
     await config.start()
