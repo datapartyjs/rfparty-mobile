@@ -498,7 +498,7 @@ export class MainWindow {
   
     let peer = new Dataparty.PeerParty({
       comms: comms,
-      noCache: false,
+      noCache: true,
       model: RFPartyModel,
       factories: RFPartyDocuments,
       config: config,
