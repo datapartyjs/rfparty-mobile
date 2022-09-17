@@ -201,7 +201,7 @@ export class RFParty extends EventEmitter {
     this.queryActive = true
 
 
-    let query = this.party.find().type('ble_station')
+    let query = this.party.find().type('ble_station').limit(2000)
     let updateStartTime = new moment()
 
     if(input[0]=='{'){
@@ -521,6 +521,7 @@ export class RFParty extends EventEmitter {
   async getBLEDevice(mac){
     let station = (await this.party.find().type('ble_adv')
       .where('address').equals(mac)
+      .limit(1)
       .exec())[0]
 
     return station

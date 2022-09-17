@@ -31,9 +31,9 @@ exports.updatGeoBoundsByGeoBounds = (bounds, otherBounds)=>{
   let min = bounds.min
   let max = bounds.max
 
-  if(!min && !!otherBounds.min){
+  if(!min){
     min = otherBounds.min
-  } else {
+  } else if (otherBounds.min) {
     min = {
       lat: otherBounds.min.lat < bounds.min.lat ? otherBounds.min.lat : bounds.min.lat,
       lon: otherBounds.min.lon < bounds.min.lon ? otherBounds.min.lon : bounds.min.lon
@@ -42,7 +42,7 @@ exports.updatGeoBoundsByGeoBounds = (bounds, otherBounds)=>{
 
   if(!max){
     max = otherBounds.max
-  } else {
+  } else if (otherBounds.max) {
     max = {
       lat: otherBounds.max.lat > bounds.max.lat ? otherBounds.max.lat : bounds.max.lat,
       lon: otherBounds.max.lon > bounds.max.lon ? otherBounds.max.lon : bounds.max.lon

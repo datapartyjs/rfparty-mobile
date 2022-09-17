@@ -20,7 +20,8 @@ module.exports = class GeoTrackDocument extends Dataparty.IDocument {
     let tracks = (await party.find()
       .type('geo_track')
       .where('timebounds.first').gt(prev24.valueOf())
-      .sort('-timebounds.first')
+      //.sort('-timebounds.first')
+      .limit(1)
       .exec())
 
     let track = tracks[0]

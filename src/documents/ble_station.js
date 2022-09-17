@@ -20,6 +20,7 @@ module.exports = class BleStationDocument extends Dataparty.IDocument {
     let stations = (await party.find()
       .type('ble_station')
       .where('address').equals(bleAdv.data.address.toLowerCase())
+      .limit(1)
       .exec())
 
     let bleStationDoc = stations[0]

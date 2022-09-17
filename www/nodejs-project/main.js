@@ -11,6 +11,8 @@ let peer = null
 let party = null
 let config = null
 
+let pendingQueryCount = 0
+
 function mkdir(dir){
   try{
     fs.mkdirSync(dir)
@@ -65,7 +67,6 @@ async function main(channel){
       qbOptions: {debounce: false, find_dedup:true, timeout: 30000}
     })
 
-  
     debug.debug('peer party')
     peer = new Dataparty.PeerParty({
       comms: new Dataparty.Comms.LoopbackComms({
@@ -84,13 +85,27 @@ async function main(channel){
     debug.debug('post id')
     cordova.channel.post('identity', party.identity)
 
-    cordova.channel.on('identity', async (identity)=>{
+    cordova.channel.once('identity', async (identity)=>{
       debug.debug('onidentity', typeof identity, identity)
       peer.comms.remoteIdentity = identity
       await peer.start()
   
-      debug.debug('peer started')
+      debug.debug('peer party started')
     })
+
+    let compactStartMs = Date.now()
+    debug.debug('compacting db started ...', new Date())
+    await party.start()
+    await party.db.compactDatabase()
+    let compactEndtMs = Date.now()
+    debug.debug('compacting db finished', compactEndtMs - compactStartMs, 'ms')
+
+    setInterval(()=>{
+      if(peer.comms.pending_calls != pendingQueryCount){
+        pendingQueryCount = peer.comms.pending_calls
+        cordova.channel.post('pending_calls', pendingQueryCount)
+      }
+    },500)
 
     debug.debug('started')
 

@@ -25,7 +25,8 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
       .where('address').equals(dev.id.toLowerCase())
       .where('packet.hash').equals(packetHash)
       .where('timebounds.first').gt(prev7d.valueOf())
-      .sort('-timebounds.first')
+      //.sort('-timebounds.first')
+      .limit(1)
       .exec())
 
     let bleAdvDoc = advs[0]

@@ -30,7 +30,7 @@ const RFPartyDocuments = require('./documents')
 window.last_crash_count = parseInt( localStorage.getItem('crash_count') ) || 0
 window.crash_count = parseInt( localStorage.getItem('crash_count') ) || 0
 
-
+window.nodejs_pending_calls = 0
 
 const byteToHex = [];
 for(let n=0; n<0xff; ++n){
@@ -529,12 +529,16 @@ export class MainWindow {
   
     channel.post('identity', peer.identity)
   
-    channel.on('identity', async (identity)=>{
+    channel.once('identity', async (identity)=>{
       debug('onidentity', identity)
       peer.comms.remoteIdentity = identity
       await peer.start()
   
       debug('peer started')
+    })
+
+    channel.on('pending_calls',(pending)=>{
+      window.nodejs_pending_calls = pending
     })
   
     window.loadingState.startStep('authorized to party 😎')
@@ -626,12 +630,13 @@ export class MainWindow {
     //BackgroundGeolocation.start()
   }
 
-  static updateStatus(){
+  static updateStatus(color){
     
 
     let locationCount = window.rfparty.locationCount
     let stationCount = window.rfparty.stationCount
     let packetCount = window.rfparty.packetCount
+  
 
     window.status_text = '📨' + packetCount + ' 🛰️'+ stationCount +' 📍'+locationCount
 
@@ -640,12 +645,22 @@ export class MainWindow {
       window.status_text = '⚠️' + crashes +' ' + window.status_text
     }
 
-    let pending = Object.keys(window.rfparty.party.qb.crufls).length
-    if(pending > 0){
-      window.status_text = '⏳' + pending + ' ' + window.status_text
+    if(window.rfparty.party != null){
+
+      let nodePending = window.nodejs_pending_calls
+      if(nodePending > 0){
+        window.status_text = '📩' + nodePending + ' ' + window.status_text
+      }
+
+
+      let pending = Object.keys(window.rfparty.party.qb.crufls).length
+      if(pending > 0){
+        window.status_text = '⏳' + pending + ' ' + window.status_text
+      }
     }
 
-    MainWindow.setConnectionStatus(window.status_text, 'green')
+
+    MainWindow.setConnectionStatus(window.status_text, color || 'green')
   }
 
   static async setupSession(channel){
@@ -715,11 +730,11 @@ export class MainWindow {
     window.loadingState.completeStep('configure hardware')
 
 
-    window.rfparty.on('station_count', MainWindow.updateStatus)
+    window.rfparty.on('station_count', ()=>{MainWindow.updateStatus('green')})
 
-    window.rfparty.on('packet_count', MainWindow.updateStatus)
+    window.rfparty.on('packet_count', ()=>{MainWindow.updateStatus('limegreen')})
 
-    window.rfparty.on('location_count', MainWindow.updateStatus)
+    window.rfparty.on('location_count', ()=>{MainWindow.updateStatus('blue')})
 
     window.addEventListener("unhandledrejection", function(promiseRejectionEvent) {
       let reason
