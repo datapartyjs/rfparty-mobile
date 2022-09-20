@@ -102,6 +102,9 @@ export class RFParty extends EventEmitter {
     //Leaflet.control.attribution({prefix: '<span id="map-attribution" class="map-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></span>' })
     //  .addTo(this.map)
 
+    //this.map.setView([ 0, ], 17)
+    this.positionCircle = Leaflet.circle([0,0], { color: 'orange', fill:false, weight:1, opacity: 0.9 }).addTo(this.map)
+
     debug('rfparty constructor')
 
 
@@ -133,19 +136,28 @@ export class RFParty extends EventEmitter {
       toLoc(location)
     )
 
-    let hasMoved = (movedDistance*1000) > 5
+    let hasMoved = ((movedDistance*1000) > 5) && location.accuracy < 30
 
     //Update if we don't have a center or accuracy improves and autocenter is turned-on
     if( !this.center || (this.autoCenter && (hasMoved || this.center.accuracy > location.accuracy))){
       this.center = location
       debug('update view center')
       this.map.setView([ location.latitude, location.longitude], 17)
+      
+      this.lastLocation = {
+        latitude: location.latitude,
+        longitude: location.longitude
+      }
+
+      Leaflet.circle([ location.latitude, location.longitude], { color: 'white', radius: location.accuracy, fill:false, weight:1, opacity: 0.3 }).addTo(this.map)
+
+      this.positionCircle.setStyle({ color: 'green', fill:false, weight:1, opacity: 0.9 })
+    } else {
+      this.positionCircle.setStyle({ color: 'orange', fill:false, weight:1, opacity: 0.9 })
     }
 
-    this.lastLocation = {
-      latitude: location.latitude,
-      longitude: location.longitude
-    }
+    this.positionCircle.setRadius(location.accuracy)
+    this.positionCircle.setLatLng([ location.latitude, location.longitude])
 
     let track = await RFPartyDocuments.geo_track.indexGeoPoint(this.party, location)
     this.locationCount++

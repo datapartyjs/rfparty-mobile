@@ -8,18 +8,17 @@ const GeoUtils = require('../geo-utils')
 
 module.exports = class GeoTrackDocument extends Dataparty.IDocument {
   constructor({ party, type, id, data }) {
-    super({ party, type, id, data });
-    debug("instantiated - ", this.id);
-
+    super({ party, type, id, data })
+    debug("instantiated - ", this.id)
   }
 
   static async indexGeoPoint(party, point){
 
-    let prev24 = moment().subtract(24, 'hours')
+    let prev = moment().subtract(15, 'min')
 
     let tracks = (await party.find()
       .type('geo_track')
-      .where('timebounds.first').gt(prev24.valueOf())
+      .where('timebounds.first').gt(prev.valueOf())
       //.sort('-timebounds.first')
       .limit(1)
       .exec())

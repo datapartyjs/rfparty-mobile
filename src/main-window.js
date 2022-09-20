@@ -414,7 +414,6 @@ export class MainWindow {
     let deltaMs = now.diff(window.lastScanStart, 'ms')
 
     if(deltaMs < MainWindow.scanWindow){
-      debug('.')
       return
     }
 
@@ -445,6 +444,7 @@ export class MainWindow {
       window.isScanning = true
       window.lastScanStart = now
 
+
       MainWindow.checkGeoLocation()
       setTimeout(MainWindow.scanLoop, MainWindow.scanWindow)
 
@@ -471,24 +471,37 @@ export class MainWindow {
   static async setupDb(channel){
     let config = new Dataparty.Config.LocalStorageConfig({basePath:'rfparty-config'})
 
-    /*
+    
     let idbAdapter = new LokiIndexAdapter('rfparty')
 
-    //let adapter = new Loki.LokiPartitioningAdapter(idbAdapter, { paging: true });
+    let adapter = new Loki.LokiPartitioningAdapter(idbAdapter, { paging: true });
 
     
     let party = new Dataparty.LokiParty({
       path: 'rfparty-db',
-      dbAdapter: new Loki.LokiLocalStorageAdapter(),
+      dbAdapter:  idbAdapter, //new Loki.LokiLocalStorageAdapter(),
+      noCache: true,
       model: RFPartyModel,
-      config: config
+      factories: RFPartyDocuments,
+      config: config,
+      lokiOptions: {
+        autosave: true,
+        autosaveInterval: 60000
+      },
+      qbOptions: {
+        debounce: false,
+        find_dedup: true,
+        timeout: false
+      }
     })
 
     await party.start()
 
     await window.rfparty.start(party)
-    */
+    
 
+
+    return
 
 
 
@@ -539,6 +552,7 @@ export class MainWindow {
 
     channel.on('pending_calls',(pending)=>{
       window.nodejs_pending_calls = pending
+      MainWindow.updateStatus()
     })
   
     window.loadingState.startStep('authorized to party 😎')
@@ -667,8 +681,6 @@ export class MainWindow {
 
     MainWindow.closeSetupForm()
     MainWindow.openLoading()
-
-    setInterval(MainWindow.updateStatus, 500)
 
 
     cordova.plugins.backgroundMode.setDefaults({

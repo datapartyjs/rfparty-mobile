@@ -13,6 +13,15 @@ let config = null
 
 let pendingQueryCount = 0
 
+function reportStatus(){
+  if(peer.comms.pending_calls != pendingQueryCount){
+    pendingQueryCount = peer.comms.pending_calls
+    cordova.channel.post('pending_calls', pendingQueryCount)
+  }
+
+  setTimeout(reportStatus, 500)
+}
+
 function mkdir(dir){
   try{
     fs.mkdirSync(dir)
@@ -100,12 +109,10 @@ async function main(channel){
     let compactEndtMs = Date.now()
     debug.debug('compacting db finished', compactEndtMs - compactStartMs, 'ms')
 
-    setInterval(()=>{
-      if(peer.comms.pending_calls != pendingQueryCount){
-        pendingQueryCount = peer.comms.pending_calls
-        cordova.channel.post('pending_calls', pendingQueryCount)
-      }
-    },500)
+
+    reportStatus()
+    //setInterval(()=>{
+    //},500)
 
     debug.debug('started')
 
