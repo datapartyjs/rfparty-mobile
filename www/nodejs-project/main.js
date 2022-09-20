@@ -1,7 +1,8 @@
 // Require the 'cordova-bridge' to enable communications between the
 // Node.js app and the Cordova app.
-const cordova = require('cordova-bridge');
-const mkdirp = require('mkdirp')
+const fs = require('fs')
+const cordova = require('./cordova-bridge.js')
+//const mkdirp = require('mkdirp')
 //const { identity } = require('lodash')
 const Debug = require('./debug')
 let debug = new Debug(cordova, 'rfparty.nodejs')
@@ -9,6 +10,24 @@ let debug = new Debug(cordova, 'rfparty.nodejs')
 let peer = null
 let party = null
 let config = null
+
+let pendingQueryCount = 0
+
+function reportStatus(){
+  if(peer.comms.pending_calls != pendingQueryCount){
+    pendingQueryCount = peer.comms.pending_calls
+    cordova.channel.post('pending_calls', pendingQueryCount)
+  }
+
+  setTimeout(reportStatus, 500)
+}
+
+function mkdir(dir){
+  try{
+    fs.mkdirSync(dir)
+  }
+  catch(err){}
+}
 
 async function main(channel){
   
@@ -20,9 +39,9 @@ async function main(channel){
 
   try {
     debug.debug('api')
-    const Dataparty = require('@dataparty/api/src/index')
+    const Dataparty = require('./dist/dataparty-embedded.js')
     debug.debug('model')
-    const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
+    const RFPartyModel = require('./party/xyz.dataparty.rfparty.dataparty-schema.json')
 
     debug.debug('config')
 
@@ -33,12 +52,15 @@ async function main(channel){
     const dbPath =  cordova.app.datadir() + '/rfparty-host-tingo'
 
     debug.debug('mkdirp', dbPath)
-    mkdirp.sync(dbPath)
+    mkdir(dbPath)
     debug.debug('db location: ' + dbPath)
-    mkdirp.sync(configPath)
+    mkdir(configPath)
     debug.debug('config location: ' + configPath)
 
 
+    /*channel.on('debug-settings', (settings)=>{
+      debug.debug('applying global debug settings - ', settings)
+    })*/
 
     
     debug.debug('config start')
@@ -48,11 +70,12 @@ async function main(channel){
     debug.debug('tingoparty')
     party = new Dataparty.TingoParty({
       path: dbPath,
-      model: BouncerModel,
-      config: config
+      noCache: true,
+      model: RFPartyModel,
+      config: config,
+      qbOptions: {debounce: false, find_dedup:true, timeout: 30000}
     })
 
-  
     debug.debug('peer party')
     peer = new Dataparty.PeerParty({
       comms: new Dataparty.Comms.LoopbackComms({
@@ -60,7 +83,7 @@ async function main(channel){
         channel: channel
       }),
       hostParty: party,
-      model: BouncerModel,
+      model: RFPartyModel,
       config: config
     })
 
@@ -71,13 +94,25 @@ async function main(channel){
     debug.debug('post id')
     cordova.channel.post('identity', party.identity)
 
-    cordova.channel.on('identity', async (identity)=>{
+    cordova.channel.once('identity', async (identity)=>{
       debug.debug('onidentity', typeof identity, identity)
       peer.comms.remoteIdentity = identity
       await peer.start()
   
-      debug.debug('peer started')
+      debug.debug('peer party started')
     })
+
+    let compactStartMs = Date.now()
+    debug.debug('compacting db started ...', new Date())
+    await party.start()
+    await party.db.compactDatabase()
+    let compactEndtMs = Date.now()
+    debug.debug('compacting db finished', compactEndtMs - compactStartMs, 'ms')
+
+
+    reportStatus()
+    //setInterval(()=>{
+    //},500)
 
     debug.debug('started')
 
@@ -89,7 +124,7 @@ async function main(channel){
 
   cordova.app.on('pause', (pauseLock) => {
     debug.debug('app paused.');
-    pauseLock.release();
+    //pauseLock.release();
   })
 
   cordova.app.on('resume', () => {
@@ -100,6 +135,13 @@ async function main(channel){
   debug.debug('waiting to party...')
   await peer.comms.authorized()
   debug.debug('authorized to party 😎')
+
+  let handleError = (...err)=>{
+    cordova.channel.send('error', err)
+  }
+
+  process.on('unhandledRejection', handleError)
+  process.on('uncaughtException', handleError)
 
   /*await new Promise((resolve,reject)=>{
     console.log('for ever')

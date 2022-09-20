@@ -1,7 +1,7 @@
 {
   "name": "xyz.dataparty.rfparty",
   "displayName": "rfparty",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "A bluetooth tricorder",
   "source": "./index.html",
   "scripts": {
@@ -10,28 +10,39 @@
     "init": "node ./scripts/init.js",
     "prepare-nodejs": "cd www/nodejs-project && TARGET_ARCH=arm64 TARGET_PLATFORM=android npm install",
     "lint": "eslint --fix src/ || exit 0",
+    "package": "cordova run android --debug",
+    "repackage": "cordova clean android; cordova run android --debug",
+    "deploy": "killall java; cordova run android --debug",
+    "clean-dataparty": "rm -rf node_modules/@dataparty/api; rm package-lock.json",
+    "clean-nodejs": "cd www/nodejs-project && npm run clean",
+    "build-nodejs": "cd www/nodejs-project && npm run build",
+    "build-party": "./scripts/build-party.sh",
     "build-dev": "parcel build index.html --no-minify --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html",
-    "build": "parcel build index.html --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html"
+    "build": "npm run build-party; npm run build-nodejs; parcel build index.html  --no-content-hash --public-url . --dist-dir ./www index.html"
   },
   "author": "Dataparty",
   "license": "Apache-2.0",
   "devDependencies": {
     "buffer": "^6.0.3",
     "cordova": "11.0.0",
-    "cordova-android": "^10.1.2",
+    "cordova-android": "^11.0.0",
+    "cordova-background-geolocation-plugin": "^2.0.7",
     "cordova-plugin-android-permissions": "^1.1.3",
+    "cordova-plugin-androidx": "^3.0.0",
     "cordova-plugin-androidx-adapter": "^1.1.3",
-    "cordova-plugin-badge": "^0.8.8",
+    "cordova-plugin-background-mode": "github:sevenbitbyte/cordova-plugin-background-mode",
+    "cordova-plugin-badge": "github:katzer/cordova-plugin-badge",
     "cordova-plugin-ble-central": "file:../cordova-plugin-ble-central",
     "cordova-plugin-console": "^1.1.0",
     "cordova-plugin-device": "^2.1.0",
     "cordova-plugin-dialogs": "^2.0.2",
-    "cordova-plugin-geolocation": "^4.1.0",
-    "cordova-plugin-local-notification-fixed": "^0.11.0",
+    "cordova-plugin-exclude-files": "^1.0.1",
+    "cordova-plugin-local-notification": "github:rgarciadelongoria/cordova-plugin-local-notifications",
     "cordova-plugin-play-default-sounds": "^1.0.1",
+    "cordova-plugin-powermanagement-orig": "github:sevenbitbyte/cordova-plugin-powermanagement",
+    "cordova.plugins.diagnostic": "^7.1.0",
     "eslint": "8.19.0",
-    "events": "^3.3.0",
-    "nodejs-mobile-cordova": "^0.4.3",
+    "nodejs-mobile-cordova": "file:../nodejs-mobile-cordova",
     "parcel": "2.6.2",
     "parcel-plugin-clean-dist": "0.0.6",
     "parcel-plugin-static-files-copy": "2.6.0",
@@ -40,11 +51,11 @@
     "stream-browserify": "^3.0.0"
   },
   "dependencies": {
-    "@dataparty/api": "1.2.7",
+    "@dataparty/api": "datapartyjs/dataparty-api#nodejs-bundle",
     "@dataparty/bouncer-model": "1.4.3",
-    "cordova-plugin-whitelist": "1.3.5",
     "csv": "^6.1.5",
     "debug": "^4.3.4",
+    "earth-distance-js": "^1.4.1",
     "json-viewer-js": "^1.0.8",
     "json5": "^2.2.1",
     "jsonpath-plus": "^7.0.0",
@@ -52,6 +63,7 @@
     "leaflet": "^1.8.0",
     "lodash": "^4.17.21",
     "lokijs": "^1.5.12",
+    "md5": "^2.3.0",
     "moment": "^2.29.3",
     "moment-timezone": "^0.5.34",
     "xml-js": "^1.6.11"
@@ -72,25 +84,32 @@
   },
   "cordova": {
     "plugins": {
-      "cordova-plugin-whitelist": {},
       "cordova-plugin-console": {},
       "cordova-plugin-android-permissions": {},
-      "cordova-plugin-badge": {},
       "cordova-plugin-play-default-sounds": {},
       "nodejs-mobile-cordova": {},
       "cordova-plugin-device": {},
       "cordova-plugin-androidx-adapter": {},
-      "cordova-plugin-local-notification-fixed": {
+      "cordova-plugin-local-notification": {
         "ANDROID_SUPPORT_V4_VERSION": "26.+"
       },
       "cordova-plugin-ble-central": {
         "ACCESS_BACKGROUND_LOCATION": "true"
       },
-      "cordova-plugin-geolocation": {
-        "GPS_REQUIRED": "true"
+      "cordova-plugin-dialogs": {},
+      "cordova-plugin-androidx": {},
+      "cordova-plugin-exclude-files": {},
+      "cordova-background-geolocation-plugin": {},
+      "at.gofg.sportscomputer.powermanagement": {},
+      "cordova-plugin-badge": {},
+      "cordova.plugins.diagnostic": {
+        "ANDROIDX_VERSION": "1.0.0",
+        "ANDROIDX_APPCOMPAT_VERSION": "1.3.1"
       },
-      "cordova-plugin-dialogs": {}
+      "cordova-plugin-background-mode": {}
     },
-    "platforms": []
+    "platforms": [
+      "android"
+    ]
   }
 }

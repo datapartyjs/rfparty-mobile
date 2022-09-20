@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="./src/main.css"/>
   </head>
 
-  <body onload="MainWindow.onload('map')">
+  <!--<body onload="MainWindow.onload('map')">-->
+  <body>
       <div id='modal-shadow' class='modal-shadow'></div>
       <div class='header' id='header' >
         rfparty
@@ -43,8 +44,9 @@
       <div id="device-info" class='device-info hidden'>
         <span class="close" onclick="window.MainWindow.hideDiv('device-info')">X</span>
         <h3 id='device-info-name'>name</h3>
+        <span id='device-info-duration'>duration</span><br>
         <span id='device-info-address'>address</span><br>
-        <span id='device-info-company'>company</span>
+        <span id='device-info-company'>company</span><br>
 
         <h4>Services</h4>
 
@@ -67,27 +69,10 @@
             <h2>Setup</h2>
           </div>
           <div class="modal-body">
-            
-              <p>
-                <labal for="scanDBFile">scan db</labal>
-                <input id="scanDBFile" type="file" name="scanDBFile" accept=".db"/>
-              </p>
-          
-              <p>
-                <labal for="gpxFiles">gpx files</labal>
-                <input id='gpxFiles' type="file" name="gpxFiles[]" accept=".gpx" multiple/>
-              </p>
-
-              <br>
     
               <p>
                 <center><button class='setup-submit' type="submit">load</button></center>
               </p>
-          </div>
-          <div class="modal-footer" onclick='gotoGithub()'>
-            <!-- <h3>About  
-              <a href='https://github.com/datapartyjs/teleop-xyz' target='_'> GitHub</a>
-            </h3> -->
           </div>
           </form>
         </div>
@@ -97,13 +82,13 @@
       
 
       <footer class='footer-left'>
-        <span><span class='footer-logo'>rfparty.xyz</span> - <span id='version-text'></span> © 2022 <a href='https://www.dataparty.xyz/'>dataparty llc</a></span>
+        <span><span class='footer-logo'>rfparty</span> - <span id='version-text'></span> © 2022 dataparty dao</span>
 
       </footer>
 
-      <footer class='footer-right'>
+      <!--<footer class='footer-right'>
         <small>map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></small>
-      </footer>
+      </footer>-->
 
       <script type="text/javascript" src="./cordova.js"></script>
       <script src="src/app.js" type="module"></script>

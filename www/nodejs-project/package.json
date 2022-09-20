@@ -2,16 +2,95 @@
   "name": "rfparty-backend",
   "version": "0.1.0",
   "description": "rfparty app backend",
-  "main": "main.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "mv ../../moved_node_modules node_modules; rm -rf node_modules/@dataparty/api; rm package-lock.json;  npm i",
+    "build": "mv ../../moved_node_modules node_modules; cp node_modules/@dataparty/api/dist/dataparty-embedded.js dist;  rm -rf .parcel-cache; mv node_modules ../../moved_node_modules"
   },
   "author": "Dataparty DAO",
   "license": "MIT",
   "dependencies": {
-    "@dataparty/api": "1.2.10",
-    "@dataparty/bouncer-model": "^1.4.3",
+    "@dataparty/api": "datapartyjs/dataparty-api#nodejs-bundle",
     "debug": "^4.3.4",
-    "mkdirp": "^1.0.4"
+    "eventemitter3": "^4.0.7",
+    "mkdirp": "^1.0.4",
+    "pify": "^6.1.0"
+  },
+  "alias": {
+    "events": "eventemitter3"
+  },
+  "targets": {
+    "main": {
+      "source": "main.js",
+      "context": "node",
+      "optimize": false,
+      "includeNodeModules": [
+        "@dataparty/api",
+        "@dataparty/crypto",
+        "eventemitter3",
+        "mkdirp",
+        "ms",
+        "websocket",
+        "es5-ext/*",
+        "es5-iterator",
+        "es6-symbol",
+        "next-tick",
+        "yaeti",
+        "utf-8-validate",
+        "typedarray-to-buffer",
+        "bufferutil",
+        "json-schema-to-typescript",
+        "cli-color",
+        "d",
+        "simple-peer",
+        "@hapi/joi",
+        "@hapi/hoek",
+        "jsonpath-plus",
+        "git-repo-info",
+        "debug",
+        "wreck",
+        "http"
+      ],
+      "engines": {
+        "node": ">= 10"
+      }
+    },
+    "cordova-bridge": {
+      "source": "cordova-bridge.js",
+      "context": "node",
+      "optimize": false,
+      "isLibrary": true,
+      "includeNodeModules": [
+        "@dataparty/api",
+        "@dataparty/crypto",
+        "eventemitter3",
+        "mkdirp",
+        "ms",
+        "websocket",
+        "es5-ext/*",
+        "es5-iterator",
+        "es6-symbol",
+        "next-tick",
+        "yaeti",
+        "utf-8-validate",
+        "typedarray-to-buffer",
+        "bufferutil",
+        "json-schema-to-typescript",
+        "cli-color",
+        "d",
+        "simple-peer",
+        "@hapi/joi",
+        "@hapi/hoek",
+        "jsonpath-plus",
+        "git-repo-info",
+        "debug",
+        "wreck",
+        "http"
+      ],
+      "engines": {
+        "node": ">= 12"
+      }
+    }
   }
 }

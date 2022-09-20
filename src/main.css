@@ -186,9 +186,9 @@ body{
   
   color: white;
   bottom: 10vh;
-  top: 20vh;
-  left:20vw;
-  width: 60vw;
+  top: 10vh;
+  left:10vw;
+  width: 75vw;
 
   font-family: 'Roboto Condensed';
   font-weight: 200;
@@ -221,9 +221,9 @@ progress { color: white; }
 
 .loading-details {
   width: 100%;
-  height: 100%;
+  height: 40vh;
   margin: 10px;
-  padding: 20px;
+  padding: 0px;
   background-color: rgba(0, 0, 0, 0.349);
   color: white;
   
@@ -231,6 +231,8 @@ progress { color: white; }
   font-family: Roboto Condensed;
   font-weight: 400;
   font-size: 10px;
+
+  resize: none;
 }
 
 
@@ -301,17 +303,17 @@ outline: 1px solid slategrey;
 .footer-logo {
   font-family: 'Permanent Marker';
   position: relative;
-  top: -2px;
+  top: 0px;
 }
 
 .footer-left {
   position: fixed; /* Stay in place */
   z-index: 1;
-  height: 20px;
+  height: 10px;
   color: rgba(192, 191, 191, 0.897);
   left: 5px;
   bottom: 3px;
-  font-size: 18px;
+  font-size: 8px;
 
   margin: 0 0 0 0;
   padding: 0;
@@ -324,7 +326,7 @@ outline: 1px solid slategrey;
   color: rgba(192, 191, 191, 0.897);
   right: 5px;
   bottom: 0px;
-  font-size: 10px;
+  font-size: 8px;
 
   margin: 0 0 0 0;
   padding: 0;
@@ -354,18 +356,18 @@ outline: 1px solid slategrey;
   }
 
   .footer-left {
-    height: 20px;
+    height: 10px;
     left: 5px;
     bottom: 2px;
-    font-size: 18px;
+    font-size: 8px;
   }
 
 
   .footer-right {
-    height: 20px;
+    height: 10px;
     right: 5px;
     bottom: 2px;
-    font-size: 18px;
+    font-size: 8px;
   }
 
   .content {

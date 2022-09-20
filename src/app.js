@@ -38,66 +38,12 @@ nodejs.channel.on('error', onerror)
 async function main(channel){
   console.log('app.js - main()')
 
-  let config = new Dataparty.Config.LocalStorageConfig({basePath:'rfparty'})
-
-  let comms = new Dataparty.Comms.LoopbackComms({
-    channel: channel
-  })
-
-  let peer = new Dataparty.PeerParty({
-    comms: comms,
-    model: BouncerModel,
-    config: config
-  })
-
-
-
-
-
-  console.log('starting nodejs')
-  let nodejsStart = new Promise((resolve, reject)=>{
-    nodejs.start('main.js', (err)=>{
-      if(err){ reject(err) }
-      else { resolve() }
-    })
-  })
-
-  await nodejsStart
-  console.log ('nodejs Mobile Engine Started')
-
-  await config.start()
-  await peer.loadIdentity()
-
-  channel.post('identity', peer.identity)
-
-  channel.on('identity', async (identity)=>{
-    console.log('onidentity', identity)
-    peer.comms.remoteIdentity = identity
-    await peer.start()
-
-    console.log('peer started')
-  })
-
-  console.log('waiting to party...')
-  await peer.comms.authorized()
-  console.log('authorized to party 😎')
-
-  let user = (await peer.find()
-    .type('user')
-    .where('name').equals('tester')
-    .exec())[0]
-
-
-  if(!user){
-    console.log('creating document')
-    user = await peer.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
+  try{
+    await MainWindow.onload('map', channel)
   }
-  else{
-    console.log('loaded document')
+  catch(err){
+    console.log('error', err)
   }
-    
-
-  console.log(user.data)
 
 }
 
@@ -106,7 +52,7 @@ async function ready() {
 
   try{
     await main(nodejs.channel).catch(err=>{
-      console.log('ERROR - app.js main catch' + JSON.stringify(err,null,2))
+      console.log('ERROR - app.js main catch' + JSON.stringify(err,null,2), err)
     }).then(()=>{
       console.log('finished app.js')
     })
