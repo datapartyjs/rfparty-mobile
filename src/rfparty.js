@@ -94,6 +94,7 @@ export class RFParty extends EventEmitter {
     this.center = null
     this.detailsViewer = null
 
+    this.divId = divId
     this.map = Leaflet.map(divId,{
       attributionControl: false
     })
@@ -146,7 +147,8 @@ export class RFParty extends EventEmitter {
       
       this.lastLocation = {
         latitude: location.latitude,
-        longitude: location.longitude
+        longitude: location.longitude,
+        accuracy: location.accuracy
       }
 
       Leaflet.circle([ location.latitude, location.longitude], { color: 'white', radius: location.accuracy, fill:false, weight:1, opacity: 0.3 }).addTo(this.map)
@@ -213,7 +215,7 @@ export class RFParty extends EventEmitter {
     this.queryActive = true
 
 
-    let query = this.party.find().type('ble_station').limit(2000)
+    let query = this.party.find().type('ble_station').limit(5000)
     let updateStartTime = new moment()
 
     if(input[0]=='{'){
@@ -229,7 +231,7 @@ export class RFParty extends EventEmitter {
         const tokens = input.split(' ')
   
         let term = tokens.slice(1).join(' ')
-        switch(tokens[0]){
+        switch(tokens[0].toLowerCase()){
           case 'mac':
           case 'address':
             query = query.where('address').equals(term)   //TODO - needs $contains support

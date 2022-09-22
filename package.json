@@ -1,7 +1,7 @@
 {
   "name": "xyz.dataparty.rfparty",
   "displayName": "rfparty",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A bluetooth tricorder",
   "source": "./index.html",
   "scripts": {
@@ -37,6 +37,7 @@
     "cordova-plugin-device": "^2.1.0",
     "cordova-plugin-dialogs": "^2.0.2",
     "cordova-plugin-exclude-files": "^1.0.1",
+    "cordova-plugin-fullscreen": "^1.3.0",
     "cordova-plugin-local-notification": "github:rgarciadelongoria/cordova-plugin-local-notifications",
     "cordova-plugin-play-default-sounds": "^1.0.1",
     "cordova-plugin-powermanagement-orig": "github:sevenbitbyte/cordova-plugin-powermanagement",
@@ -66,6 +67,8 @@
     "md5": "^2.3.0",
     "moment": "^2.29.3",
     "moment-timezone": "^0.5.34",
+    "pify": "^6.1.0",
+    "promisfy": "^1.2.0",
     "xml-js": "^1.6.11"
   },
   "staticFiles": {
@@ -106,7 +109,8 @@
         "ANDROIDX_VERSION": "1.0.0",
         "ANDROIDX_APPCOMPAT_VERSION": "1.3.1"
       },
-      "cordova-plugin-background-mode": {}
+      "cordova-plugin-background-mode": {},
+      "cordova-plugin-fullscreen": {}
     },
     "platforms": [
       "android"

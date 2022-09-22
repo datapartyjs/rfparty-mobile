@@ -15,7 +15,6 @@ const onLocationDebug = Debug('geolocation')
 const moment = require('moment')
 
 
-
 const Dataparty = require( '@dataparty/api/src/index-browser' )
 const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schema.json')
 
@@ -109,8 +108,9 @@ export class MainWindow {
     form.addEventListener('submit', MainWindow.startSession);
 
     const versionText = document.getElementById('version-text')
-    versionText.innerText = 'v' + RFParty.Version
-
+    if(versionText){
+      versionText.innerText = 'v' + RFParty.Version
+    }
 
     await MainWindow.setupSession(channel)
   }
@@ -677,10 +677,51 @@ export class MainWindow {
     MainWindow.setConnectionStatus(window.status_text, color || 'green')
   }
 
+  static async setupDisply(){
+
+    const p = (fn)=>{
+      return ()=>{
+        return new Promise((resolve,reject)=>{
+          fn(resolve,reject)
+        })
+      }
+    }
+
+    let supported = await (p(AndroidFullScreen.isSupported)())
+    supported == supported && await (p(AndroidFullScreen.isImmersiveModeSupported)())
+
+    if(!supported){
+      console.log('not full screen')
+      return
+    }
+    
+    //await (p(AndroidFullScreen.showUnderSystemUI)())
+
+    await (p(AndroidFullScreen.immersiveMode)())
+
+
+    let dimensionsImmersiveFinal = {
+      width: await (p(AndroidFullScreen.immersiveWidth)()),
+      height: await (p(AndroidFullScreen.immersiveHeight)())
+    }
+    
+    let dimensionsHtmlFinal = {
+      width: window.screen.width * window.devicePixelRatio,
+      height: window.screen.height * window.devicePixelRatio
+    }
+
+    console.log('html5final dimensions final', dimensionsHtmlFinal)
+
+    console.log('immersive dimensions final', dimensionsImmersiveFinal)
+
+
+  }
+
   static async setupSession(channel){
 
     MainWindow.closeSetupForm()
     MainWindow.openLoading()
+    MainWindow.setupDisply()
 
 
     cordova.plugins.backgroundMode.setDefaults({
@@ -693,6 +734,8 @@ export class MainWindow {
       silent: true
       //bigText: Boolean
     })
+
+    cordova.plugins.backgroundMode.overrideBackButton()
 
     cordova.plugins.backgroundMode.enable()
 
@@ -838,44 +881,50 @@ export class MainWindow {
 
 
     searchElem.addEventListener('input', (event)=>{
-      debug('input', event)
+      console.log('search input', event)
+        MainWindow.updateHints(event.target.value)
+    })
 
-      
-      const hints = MainWindow.searchSuggestion(event.target.value)
+    searchElem.addEventListener('focus', (event)=>{
+      console.log('search focus', event)
+      MainWindow.updateHints(searchElem.value || 'help')
+    })
 
+    searchElem.addEventListener('focusout', (event)=>{
+      console.log('search focusout', event)
 
-      debug('hint', event.target.value, hints)
+    })
 
-      if(hints.length == 0){
-        window.MainWindow.hideDiv('search-hint')
-      }
-      else if(hints.length == 1){
-        window.MainWindow.hideDiv('search-status')
-        window.MainWindow.showDiv('search-hint')
-        hintElem.innerText = hints[0]
-      }
-      else{
-        window.MainWindow.hideDiv('search-status')
-        window.MainWindow.showDiv('search-hint')
-        hintElem.innerText = hints.join('\n')
-      }
+    hintElem.addEventListener('focus', (event)=>{
+      console.log('hint focus', event)
+      MainWindow.updateHints(searchElem.value || 'help')
+    })
+
+    hintElem.addEventListener('focusin', (event)=>{
+      console.log('hint focusin', event)
+      MainWindow.updateHints(searchElem.value || 'help')
+    })
+
+    hintElem.addEventListener('focusout', (event)=>{
+      console.log('hint focusout', event)
+
+      //if(document.activeElement !== searchElem){
+      /*} else {
+        MainWindow.updateHints(searchElem.value || 'help')
+      }*/
 
     })
 
     searchElem.addEventListener('change', (event)=>{
-
-      
       const input = event.target.value
 
-      debug('search input', input)
+      MainWindow.doSearch(input)
+    })
 
-      searchStatusElem.innerText = 'searching . . .'
-      window.MainWindow.showDiv('search-status')
+    let mapElem = document.getElementById(window.rfparty.divId)
 
-      setTimeout(()=>{
-        window.rfparty.handleSearch.bind(window.rfparty)(input)
-      },10)
-
+    mapElem.addEventListener('focus', ()=>{
+      MainWindow.hideDiv('search-hint')
     })
 
     //await MainWindow.delay(10000) 
@@ -883,21 +932,90 @@ export class MainWindow {
     MainWindow.closeLoading()
   }
 
+  static doSearch(input){
+    debug('search input', input)
+
+
+    let mapElem = document.getElementById(window.rfparty.divId)
+    let searchStatusElem = document.getElementById('search-status')
+    searchStatusElem.innerText = 'searching . . .'
+    MainWindow.showDiv('search-status')
+    MainWindow.hideDiv('search-hint')
+
+    mapElem.focus()
+
+    setTimeout(()=>{
+      window.rfparty.handleSearch.bind(window.rfparty)(input)
+    },10)
+  }
+
+  static updateHints(inputText){
+    const hints = MainWindow.searchSuggestion(inputText)
+
+
+    console.log('hint', inputText, hints)
+
+    let hintElem = document.getElementById('search-hint')
+
+    if(hints.length == 0){
+      MainWindow.hideDiv('search-hint')
+    }
+    else if(hints.length == 1){
+      MainWindow.hideDiv('search-status')
+      MainWindow.showDiv('search-hint')
+      hintElem.innerHTML = hints[0]
+    }
+    else{
+      MainWindow.hideDiv('search-status')
+      MainWindow.showDiv('search-hint')
+      hintElem.innerHTML = hints.join('\n<hr id="hint-param-hr" class="hint-param-hr"/>')
+    }
+  }
+
+  static selectHint(hintKey){
+    console.log('selectHint', hintKey)
+
+    let searchElem = document.getElementById('search-input')
+    searchElem.value = hintKey
+
+    if(SearchSuggestions[hintKey] !== false){
+      MainWindow.updateHints(hintKey)
+      searchElem.focus()
+
+    } else {
+      MainWindow.doSearch(hintKey)
+    }
+  }
+
+  static updateHintsSelected(hintKey){
+
+    console.log('updateHintsSelected')
+    let searchElem = document.getElementById('search-input')
+    
+    MainWindow.updateHints(searchElem.value)
+  }
+
   static searchSuggestion(input){
+    if(input==''){input='help'}
     const terms = input.trim().split(' ')
-    const term = terms[0].trim()
+    let term = terms[0].trim()
 
     let suggestions = []
 
     if(term && terms.length == 1){
+
+      term = term.toLowerCase()
+
       for(let key in SearchSuggestions){
         const idx = key.indexOf(term)
         if(idx > -1 || term == 'help'){
           let args = SearchSuggestions[key]
-          let suggestion = '• '+ key + ''
+          let suggestion = `<div id="hint-${key}" onfocus="MainWindow.updateHintsSelected(\'${key}\')" onclick="MainWindow.selectHint(\'${key}\')"><span>• ${key}</span><span id="hint-params" class="hint-params">`
           if(args == true){ suggestion+= ` [${key}]` }
           else if(typeof args == 'string'){ suggestion+=` [${args}]` }
           else if(Array.isArray(args)){ suggestion+= ' ['+args.join(' | ')+']' }
+
+          suggestion+='</span></div>'
 
           suggestions.push(suggestion)
 

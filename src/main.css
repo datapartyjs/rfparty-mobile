@@ -2,7 +2,16 @@
 * {
   margin:0;
   padding:0;
+
+  user-select: none;
+ -khtml-user-select: none;
+ -o-user-select: none;
+ -moz-user-select: -moz-none;
+ -webkit-user-select: none;
 }
+
+::selection { background: transparent;color:inherit; }
+::-moz-selection { background: transparent;color:inherit; }
 
 @font-face {
   font-family: 'Permanent Marker';
@@ -152,16 +161,18 @@ body{
   display: block;
   position: fixed;
   font-size: 24px;
-  top: 120px;
   
   opacity: 0.75;
-
+  
   justify-content:left;
   
-  left: 60px;
-
-  max-width: 80vw;
+  top: 15vh;
   max-height: 40vh;
+  left: 5vw;
+  right: 5vw;
+
+  /*max-width: 80vw;
+  max-height: 40vh;*/
   overflow: auto;
   color: white;
   font-family: 'Roboto Condensed';
@@ -174,7 +185,17 @@ body{
   padding: 10px;
 }
 
+.hint-params {
+  color: #ffe45e;
+  font-size: 16px;
+  font-weight: 50;
+}
 
+.hint-param-hr{
+  background: linear-gradient(to right, rgba(222, 207, 207, 0.774), rgba(0, 0, 0, 0));
+  height: 1px;
+  border: 0px;
+}
 
 
 .loading-bar {
@@ -268,7 +289,7 @@ outline: 1px solid slategrey;
 .status-area {
   position:fixed;
   
-  right: 5px;
+  right: 6vw;
 
   top:2px;
   font-size: 15px;
@@ -390,7 +411,7 @@ outline: 1px solid slategrey;
 
   .status-area {
     top:12px;
-    right: 15px;
+    right: 2vw;
     font-size: 18px;
   }
 
