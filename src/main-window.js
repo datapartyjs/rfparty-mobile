@@ -915,10 +915,21 @@ export class MainWindow {
 
     })
 
+    searchElem.addEventListener('keydown', (event)=>{
+
+      if(event.key == 'Enter'){
+        setTimeout(()=>{
+          MainWindow.doSearch(searchElem.value)
+        }, 5)  
+      }
+    })
+
     searchElem.addEventListener('change', (event)=>{
       const input = event.target.value
 
-      MainWindow.doSearch(input)
+      setTimeout(()=>{
+        MainWindow.doSearch(input)
+      }, 5)
     })
 
     let mapElem = document.getElementById(window.rfparty.divId)
@@ -1002,7 +1013,7 @@ export class MainWindow {
 
     let suggestions = []
 
-    if(term && terms.length == 1){
+    if(term && terms.length >= 1){
 
       term = term.toLowerCase()
 

@@ -126,6 +126,7 @@ export class RFParty extends EventEmitter {
     this.sessionStartTime = moment()
 
     this.queryActive = false
+    this.queryResult = null
   }
 
 
@@ -196,7 +197,8 @@ export class RFParty extends EventEmitter {
       if(!this.lastRender){ return }
       if(!this.lastQuery){ return }
 
-      if(this.lastRender.drawable != this.lastRender.onscreen){
+      if((this.lastRender.drawable != this.lastRender.onscreen || this.lastRender.drawable >= 2000) && this.lastQuery!==null){
+
         this.doQuery(this.lastQuery)
       }
     })
@@ -380,7 +382,9 @@ export class RFParty extends EventEmitter {
 
     //const devices = this.db.getCollection('ble').chain().find(query).data()
 
-    const devices = await query.exec()
+    const devices = (this.lastQuery === query) ? this.queryResult : await query.exec()
+
+    this.queryResult = devices
     
     let searchEndTime = new moment()
     let searchDuration = searchEndTime.diff(searchStartTime)
@@ -445,7 +449,7 @@ export class RFParty extends EventEmitter {
 
     debug('\trendering', bleDevices.length, 'ble devices')
 
-    let restrictToBounds = this.restrictToBounds || bleDevices.length > 3000
+    let restrictToBounds = this.restrictToBounds || bleDevices.length > 2000
 
 
     let layer = Leaflet.layerGroup()
