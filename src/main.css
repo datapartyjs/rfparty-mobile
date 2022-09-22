@@ -74,7 +74,7 @@ body{
   position: absolute;
   opacity: 1;
   padding: 20px;
-  margin: 10px;
+  margin: 0px;
   font-family: Roboto Condensed;
   font-weight: 400;
   font-size: 14px;
@@ -82,6 +82,7 @@ body{
   left: 5vw;
   right: 5vw;
   top:25vh;
+  max-height: 65vh;
 
   background-color: rgba(0, 0, 0, 0.763);
   color: white;
@@ -108,7 +109,7 @@ body{
 
   font-size: 14px;
 
-  max-height: 45vh;
+  max-height: 50vh;
 }
 
 .search-bar {
@@ -372,9 +373,6 @@ outline: 1px solid slategrey;
     line-height: 40px; /* same as height! */
   }
 
-  .device-info {
-    right: auto;
-  }
 
   .footer-left {
     height: 10px;
