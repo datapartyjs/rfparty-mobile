@@ -2,7 +2,7 @@ import moment from 'moment';
 
 const debug=require('debug')('rfparty.geo_track')
 
-const Dataparty = require( '@dataparty/api/src/index-browser' )
+const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 
 const GeoUtils = require('../geo-utils')
 

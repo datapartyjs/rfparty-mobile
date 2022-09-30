@@ -3,7 +3,7 @@ import moment from 'moment';
 const md5 = require('md5')
 const debug=require('debug')('rfparty.ble_adv')
 
-const Dataparty = require( '@dataparty/api/src/index-browser' )
+const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 
 const GeoUtils = require('../geo-utils')
 
