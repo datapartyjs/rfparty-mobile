@@ -9,7 +9,7 @@ import { GapParser } from './gap-parser'
 const Loki = require('lokijs')
 const LokiIndexAdapter = require('lokijs/src/loki-indexed-adapter')
 
-const Debug = require('debug')
+const Debug = require('debug/src/browser')
 const debug = Debug('MainWindow')
 const onLocationDebug = Debug('geolocation')
 const moment = require('moment')
@@ -472,22 +472,12 @@ export class MainWindow {
     let config = new Dataparty.Config.LocalStorageConfig({basePath:'rfparty-config'})
 
     
-    let idbAdapter = new LokiIndexAdapter('rfparty')
-
-    let adapter = new Loki.LokiPartitioningAdapter(idbAdapter, { paging: true });
-
-    
-    let party = new Dataparty.LokiParty({
-      path: 'rfparty-db',
-      dbAdapter:  idbAdapter, //new Loki.LokiLocalStorageAdapter(),
+    let party = new Dataparty.ZangoParty({
+      dbname: 'rfparty-zango-db', 
       noCache: true,
       model: RFPartyModel,
       factories: RFPartyDocuments,
       config: config,
-      lokiOptions: {
-        autosave: true,
-        autosaveInterval: 60000
-      },
       qbOptions: {
         debounce: false,
         find_dedup: true,
