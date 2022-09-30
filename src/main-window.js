@@ -15,7 +15,7 @@ const onLocationDebug = Debug('geolocation')
 const moment = require('moment')
 
 
-const Dataparty = require( '@dataparty/api/src/index-browser' )
+const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schema.json')
 
 const RFPartyDocuments = require('./documents')
@@ -1049,5 +1049,115 @@ export class MainWindow {
     const statusDot = document.getElementById('status-dot')
     statusDot.style.color = color
     statusDot.style.backgroundColor = color
+  }
+
+  static async writeChunk(writer, chunk){
+    return new Promise((resolve,reject)=>{
+
+      writer.onwriteend = resolve
+      writer.onerror = reject
+      
+      const dataObj = new Blob([chunk], { type: 'text/plain' })
+      
+      writer.write(dataObj)
+
+    })
+  }
+
+  static splitByChunks(value, chunkLength) {
+    return Array(Math.ceil(value.length / chunkLength))
+      .fill(0)
+      .map((_, index) => value.slice(index * chunkLength, (index + 1) * chunkLength))
+  }
+
+  static async writeFile(fileEntry, content){
+    return new Promise((resolve, reject)=>{
+
+      fileEntry.createWriter(async function (fileWriter) {
+
+        const chunks = MainWindow.splitByChunks(content, 1024*1024)
+
+        let idx = 0
+
+        for(let chunk of chunks){
+          try{
+            console.log('\twriting chunk '+idx+'/'+chunks.length)
+            idx++
+            await MainWindow.writeChunk(fileWriter, chunk)
+          } catch(err){
+            reject(err)
+          }
+        }
+
+        resolve()
+
+      })
+    })
+  }
+
+  static async getDirEntry(path){
+    return new Promise((resolve, reject)=>{
+
+      window.resolveLocalFileSystemURL(path, resolve, reject)
+      
+    })
+  }
+
+  static async createFile(fileName, content) {
+
+    let dirEntry = await MainWindow.getDirEntry(cordova.file.externalApplicationStorageDirectory)
+
+    return new Promise((resolve, reject)=>{
+
+      
+      // Creates a new file or returns the file if it already exists.
+      dirEntry.getFile(fileName, {create: true, exclusive: false}, function(fileEntry) {
+        
+        try{
+          resolve(MainWindow.writeFile(fileEntry, content))
+        }catch (err){
+          reject(err)
+        }
+        
+      }, reject);
+      
+    })
+  }
+
+  static async exportDb(){
+    console.log('exportDb')
+    let now = new moment()
+    let filePrefix = 'export-' + now.format('YYYY.MM.DD-HH.mm.ss') + '-'
+
+    const party = window.rfparty.party
+
+    let collectionNames = await party.db.getCollectionNames()
+
+    for(let name of collectionNames){
+
+
+      let start = moment()
+
+      console.log('exporting collection', name)
+
+      let data = (await party.find()
+        .type(name)
+        .exec(false)
+      )
+
+      data = JSON.stringify(data, null, 2)
+
+      const fileName = filePrefix + name + '.json'
+
+      console.log('writing file ('+ Math.round(data.length/1024) + ' KB):', fileName)
+
+      await MainWindow.createFile(fileName, data)
+
+      let end = moment()
+
+      console.log('duration', end.diff(start, 'second') + 'sec')
+
+    }
+
   }
 }

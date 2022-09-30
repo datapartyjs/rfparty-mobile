@@ -12,8 +12,7 @@ window.rfparty = null
 window.RFParty = RFParty
 window.MainWindow = MainWindow
 
-const Dataparty = require( '@dataparty/api/src/index-browser' )
-const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
+const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 
 window.Dataparty = Dataparty
 
