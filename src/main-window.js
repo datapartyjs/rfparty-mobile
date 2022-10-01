@@ -936,6 +936,8 @@ export class MainWindow {
   static doSearch(input){
     debug('search input', input)
 
+    if(input=='help'){return}
+
 
     let mapElem = document.getElementById(window.rfparty.divId)
     let searchStatusElem = document.getElementById('search-status')

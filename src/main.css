@@ -163,6 +163,22 @@ body{
   opacity: 0.9;
 }
 
+.search-clear {
+
+  color: black;
+  position: absolute;
+  float: right;
+  right: 0px;
+  top: 0px;
+  padding: 7px;
+  height: 1em;
+  opacity: 0.6;
+
+  font-family: 'Roboto Condensed';
+  font-weight: 100;
+  font-size: 24px;
+}
+
 .search-status {
   font-size: 12px;
   z-index: 2;
