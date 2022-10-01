@@ -98,6 +98,26 @@ body{
 
 }
 
+.jv-dark-rightString {
+  color: #66d9ef;
+  display: inline-block;
+  word-break: break-all;
+}
+
+.jv-dark-con {
+  color: #fff;
+  height: 100%;
+  width: 100%;
+  background: #272822;
+  padding: 0px;
+  margin: 0px;
+  /* font-family: monospace; */
+  overflow: auto;
+  /* min-width: 90vw; */
+  /* overflow-x: scroll; */
+  /* word-break: break-word; */
+}
+
 .device-info-details {
   display: block;
   overflow-y:auto;
@@ -107,7 +127,7 @@ body{
   border-width: 2px;
   border-style: dotted;
 
-  font-size: 14px;
+  font-size: 12px;
 
   max-height: 50vh;
 }
@@ -141,6 +161,22 @@ body{
 .search-input:hover,
 .search-input:focus {
   opacity: 0.9;
+}
+
+.search-clear {
+
+  color: black;
+  position: absolute;
+  float: right;
+  right: 0px;
+  top: 0px;
+  padding: 7px;
+  height: 1em;
+  opacity: 0.6;
+
+  font-family: 'Roboto Condensed';
+  font-weight: 100;
+  font-size: 24px;
 }
 
 .search-status {

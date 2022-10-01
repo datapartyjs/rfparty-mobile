@@ -217,7 +217,7 @@ export class RFParty extends EventEmitter {
     this.queryActive = true
 
 
-    let query = this.party.find().type('ble_station').limit(5000)
+    let query = this.party.find().type('ble_station').limit(3000)
     let updateStartTime = new moment()
 
     if(input[0]=='{'){
@@ -499,7 +499,7 @@ export class RFParty extends EventEmitter {
         if(firstPt){
           let line = Leaflet.polyline([
             this.trackToLatLonArray([firstPt, lastPt])
-          ], { color: 'blue', opacity: 0.5, weight: '5' })
+          ], { color: 'blue', opacity: 0.1, weight: '5' })
 
           layer.addLayer(line)
           line.on('click', onclick)
@@ -514,7 +514,7 @@ export class RFParty extends EventEmitter {
               type: 'ble', 
               id: dev.id,
               value: dev.data.address,
-              timestamp: dev.data.timebounds.firstlastlast
+              timestamp: dev.data.timebounds.first
             })
           })
         }
@@ -642,9 +642,17 @@ export class RFParty extends EventEmitter {
 
       debug('details viewer JSON - ', JSON.stringify(device.cleanData))
 
+      let gap = device.parsePacket()
+
+      const content = {
+        gap, 
+        base64: device.cleanData.packet.base64,
+        seen: device.cleanData.packet.seen
+      }
+
       this.detailsViewer = new JSONViewer({
         container: details,
-        data: JSON.stringify(device.cleanData.packet),
+        data: JSON.stringify(content),
         theme: 'dark',
         expand: false
       })
@@ -674,19 +682,34 @@ export class RFParty extends EventEmitter {
 
       let station = (await this.party.find().type('ble_station').id(id).exec())[0]
 
-      if(!station){ return }
+      if(!station){
+        console.log('no station')
+        return
+      }
 
-      let devAdv = (await this.party.find().type('ble_adv').where('address').equals(station.data.address).exec())[0]
+      let devAdvs = (await this.party.find().type('ble_adv').where('address').equals(station.data.address).exec())
 
-      if(!devAdv){ return }
+      let devAdv = devAdvs[0]
+
+      if(!devAdv){ 
+        console.log('no adv')
+        return }
 
       let devicePathLL = []
 
+      let trackPointQuery = []
       
 
       for(let observation of devAdv.data.packet.seen){
-        let pt = await this.getTrackPointByTime(observation.time)
+        console.log(observation)
+        trackPointQuery.push( this.getTrackPointByTime(observation.time) )
+      }
 
+      let trackPoints = await Promise.all(trackPointQuery)
+
+      for(let pt of trackPoints){
+
+        console.log('pt', pt)
 
 
         if(pt){ 
@@ -699,13 +722,14 @@ export class RFParty extends EventEmitter {
               type: 'ble', 
               id: station.id,
               value: station.data.address,
-              timestamp: observation.timestamp
+              timestamp: observation.time
             })
           })
 
           layer.addLayer(circle)
         }
       }
+
 
       if(devicePathLL.length > 0){
         let line = Leaflet.polyline(devicePathLL, { color: 'green', opacity: 0.9, weight: '4' })
@@ -744,11 +768,11 @@ export class RFParty extends EventEmitter {
   async getTrackPointByTime(timestamp) {
     let bestDeltaMs = null
     let bestPoint = null
-    let tracks = await this.getTracksByTime(timestamp - 1200000, timestamp + 6000)
+    let tracks = await this.getTracksByTime(timestamp - 600000, timestamp + 600000)
 
     for(let track of tracks){
-      for (let point of track) {
-        let deltaMs = Math.abs(moment(timestamp).diff(track.timestamp))
+      for (let point of track.data.points) {
+        let deltaMs = Math.abs(moment(timestamp).diff(point.time))
   
         if (deltaMs < bestDeltaMs || bestDeltaMs == null) {
           bestDeltaMs = deltaMs
@@ -772,7 +796,7 @@ export class RFParty extends EventEmitter {
 
     let tracks = (await this.party.find()
       .type('geo_track')
-      .sort('-timebounds.last')
+      //.sort('-timebounds.last')
         .or()
           .and()  //endtime within timebounds
             .where('timebounds.first').lt(endtime)

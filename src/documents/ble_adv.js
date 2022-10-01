@@ -7,11 +7,21 @@ const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 
 const GeoUtils = require('../geo-utils')
 
+import {GapParser} from '../gap-parser'
+
 module.exports = class BleAdvDocument extends Dataparty.IDocument {
   constructor({ party, type, id, data }) {
     super({ party, type, id, data });
     debug("instantiated - ", this.id);
 
+  }
+
+  parsePacket(){
+
+    const gapFields = GapParser.parseBase64String(this.data.packet.base64)
+
+
+    return gapFields
   }
 
   static async indexBleDevice(party, dev, point){

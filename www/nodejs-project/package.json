@@ -11,7 +11,7 @@
   "author": "Dataparty DAO",
   "license": "MIT",
   "dependencies": {
-    "@dataparty/api": "datapartyjs/dataparty-api#nodejs-bundle",
+    "@dataparty/api": "datapartyjs/dataparty-api#embedded-bundle",
     "debug": "^4.3.4",
     "eventemitter3": "^4.0.7",
     "mkdirp": "^1.0.4",

@@ -21,7 +21,9 @@
       </div>
 
       <div class='search-bar'>
-        <input id='search-input' class='search-input' type="search" placeholder="search" disabled />
+        <input id='search-input' class='search-input' type="search" placeholder="search" disabled>
+          <div class="search-clear" id="search-clear" onclick="document.getElementById('search-input').value=null">X</div>
+        </input>
       </div>
       <span id='search-hint' class='search-hint hidden'></span>
       <span id='search-status' class='search-status hidden'></span>
@@ -51,9 +53,9 @@
         <h4>Services</h4>
 
         <span id='device-info-services'></span>
-        <span id='device-info-details' class='device-info-details'>
+        <div id='device-info-details' class='device-info-details'>
           <div id='device-info-detailscontainer'></div>
-        </span>
+        </div>
       </div>
 
       <div id="map" class="content"></div>

@@ -102,10 +102,12 @@ async function main(channel){
       debug.debug('peer party started')
     })
 
+
+
     let compactStartMs = Date.now()
     debug.debug('compacting db started ...', new Date())
     await party.start()
-    await party.db.compactDatabase()
+    //await party.db.compactDatabase()
     let compactEndtMs = Date.now()
     debug.debug('compacting db finished', compactEndtMs - compactStartMs, 'ms')
 
@@ -136,8 +138,8 @@ async function main(channel){
   await peer.comms.authorized()
   debug.debug('authorized to party 😎')
 
-  let handleError = (...err)=>{
-    cordova.channel.send('error', err)
+  let handleError = (err)=>{
+    cordova.channel.send('error -' + typeof err + err.stack + err +JSON.stringify(err,null,2))
   }
 
   process.on('unhandledRejection', handleError)
