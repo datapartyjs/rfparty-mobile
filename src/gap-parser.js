@@ -1,7 +1,93 @@
+import * as UUID16_TABLES from './16bit-uuid-tables'
+import * as MANUFACTURER_TABLE from './manufacturer-company-id.json' 
+const DeviceIdentifiers = require('./device-identifiers')
+
+
+export class UUIDParser {
+
+  static lookupDeviceCompany(code){
+    return  MANUFACTURER_TABLE.Company[code] 
+  }
+
+
+  static lookupAppleService(code){
+    return DeviceIdentifiers.APPLE_Continuity[code]
+  }
+
+  static lookupUuid16(uuid){
+    const types = Object.keys(UUID16_TABLES)
+
+    for(let type of types){
+      let found = UUID16_TABLES[type][uuid]
+
+      if(found){
+        return '/'+type+'/'+found
+      }
+    }
+  }
+
+  static lookupDeviceUuid(uuid){
+    let deviceType = null
+
+    if(uuid.length == 4){
+      //deviceType = DeviceIdentifiers.UUID16[uuid]
+      deviceType = UUIDParser.lookupUuid16(uuid)
+    }
+    else if(uuid.length == 32){
+      deviceType = DeviceIdentifiers.UUID[uuid] 
+    }
+
+    return deviceType
+  }
+
+  static reverseLookupService(term){
+
+    let possibles = []
+
+    const types = Object.keys(UUID16_TABLES)
+
+    for(let type of types){ 
+      possibles.push( 
+        ...(UUIDParser.reverseLookupByName(
+            UUID16_TABLES[type], term, '/'+type+'/'
+        ).map( name=>{return '/'+type+'/'+name }) )
+      )
+    }
+    
+    return possibles.concat( 
+      UUIDParser.reverseLookupByName(DeviceIdentifiers.APPLE_Continuity, term),
+      UUIDParser.reverseLookupByName(DeviceIdentifiers.UUID, term)
+    )
+  }
+
+  static reverseLookupByName(map, text, prefix=''){
+    let names = []
+    const lowerText = text.toLowerCase()
+    for(let code in map){
+      const name = map[code]
+      const prefixedName = prefix+name
+      const lowerName = prefixedName.toLowerCase()
+
+      if(lowerName.indexOf(lowerText) != -1 ){
+        names.push(name)
+      }
+    }
+
+    return names
+  }
+
+  static decode16bitUuid(field){
+    let uuid = field.raw.data.reverse().toString('hex')
+
+    field.raw.data = uuid
+    field.value = UUIDParser.lookupDeviceUuid(uuid) || uuid
+  }
+}
+
 const GAP_TYPES = {
   0x01: {decode:'hex', name: 'Flags'},
-  0x02: {decode:'hex', name: 'ServiceClassUUIDs'},  //Incomplete 16-bit list
-  0x03: {decode:'hex', name: 'ServiceClassUUIDs'},  //Complete 16-bit list
+  0x02: {decode:'hex', parser: UUIDParser.decode16bitUuid, name: 'ServiceClassUUIDs'},  //Incomplete 16-bit list
+  0x03: {decode:'hex', parser: UUIDParser.decode16bitUuid, name: 'ServiceClassUUIDs'},  //Complete 16-bit list
   0x04: {decode:'hex', name: 'ServiceClassUUIDs'},  //Incomplete 32-bit list
   0x05: {decode:'hex', name: 'ServiceClassUUIDs'},  //Complete 32-bit list
   0x06: {decode:'hex', name: 'ServiceClassUUIDs'},  //Incomplete 128-bit list
@@ -65,8 +151,9 @@ function hexString(arrayBuffer){
   return hexOctets.join('')
 }
 
-class GapField{
+export class GapField{
   constructor(buffer, offset=0){
+    this.value = null
     this.raw = {}
     this.raw.offset = offset
     this.raw.field_length = buffer[this.raw.offset]
@@ -83,7 +170,14 @@ class GapField{
 
       this.type = Type.name || 'unknown('+this.raw.type+')'
 
-      this.raw.data = buffer.slice( this.raw.offset+2, this.raw.offset_next ).toString( Type.decode || 'hex' )
+      
+      if(Type.parser && typeof Type.parser == 'function'){
+        this.raw.data = buffer.slice( this.raw.offset+2, this.raw.offset_next )
+        Type.parser(this)
+      } else {
+        this.raw.data = buffer.slice( this.raw.offset+2, this.raw.offset_next ).toString( Type.decode || 'hex' )
+        this.value = this.raw.data
+      }
 
     }
 
