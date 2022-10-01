@@ -20,16 +20,8 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
 
     const gapFields = GapParser.parseBase64String(this.data.packet.base64)
 
-    
 
-    const packet = {
-      gapFields,
-      parsed: {
-        //
-      }
-    }
-
-    return packet
+    return gapFields
   }
 
   static async indexBleDevice(party, dev, point){

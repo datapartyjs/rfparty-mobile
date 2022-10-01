@@ -98,6 +98,26 @@ body{
 
 }
 
+.jv-dark-rightString {
+  color: #66d9ef;
+  display: inline-block;
+  word-break: break-all;
+}
+
+.jv-dark-con {
+  color: #fff;
+  height: 100%;
+  width: 100%;
+  background: #272822;
+  padding: 0px;
+  margin: 0px;
+  /* font-family: monospace; */
+  overflow: auto;
+  /* min-width: 90vw; */
+  /* overflow-x: scroll; */
+  /* word-break: break-word; */
+}
+
 .device-info-details {
   display: block;
   overflow-y:auto;
@@ -107,7 +127,7 @@ body{
   border-width: 2px;
   border-style: dotted;
 
-  font-size: 14px;
+  font-size: 12px;
 
   max-height: 50vh;
 }
