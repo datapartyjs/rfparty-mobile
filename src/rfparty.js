@@ -96,7 +96,8 @@ export class RFParty extends EventEmitter {
 
     this.divId = divId
     this.map = Leaflet.map(divId,{
-      attributionControl: false
+      attributionControl: false,
+      zoomControl: false
     })
 
     Leaflet.tileLayer(TILE_SERVER_MAPBOX, TILE_SERVER_MAPBOX_CONFIG).addTo(this.map);
