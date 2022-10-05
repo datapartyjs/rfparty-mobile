@@ -1,5 +1,3 @@
-import moment from 'moment';
-
 const debug=require('debug')('rfparty.geo_point')
 
 const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
