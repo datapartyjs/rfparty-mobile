@@ -19,6 +19,7 @@ const RFPartyDocuments = require('./documents')
 
 import * as UUID16_TABLES from './16bit-uuid-tables'
 import * as MANUFACTURER_TABLE from './manufacturer-company-id.json' 
+import { UUIDParser } from './parsers/uuid-parser'
 const DeviceIdentifiers = require('./device-identifiers')
 
 const JSONViewer = require('json-viewer-js/src/jsonViewer')
@@ -229,13 +230,18 @@ export class RFParty extends EventEmitter {
 
       try{
 
-        const tokens = input.split(' ')
+        const tokens = input.trim().split(' ')
   
         let term = tokens.slice(1).join(' ')
         switch(tokens[0].toLowerCase()){
           case 'mac':
           case 'address':
-            query = query.where('address').equals(term)   //TODO - needs $contains support
+            if(tokens.length < 2){
+              query = query.where('address').exists()
+            }
+            else{
+              query = query.where('address').regex(new RegExp(term, 'i'))   //TODO - needs $contains support
+            }
             break
           case 'here':
             let viewport = this.map.getBounds()
@@ -272,32 +278,64 @@ export class RFParty extends EventEmitter {
             break*/
           case 'name':
           case 'localname':
-            debug('select by name', tokens)
-            query = query.where('summary.name').equals(term)   //TODO - needs $contains support
+            debug('select by localname', tokens)
+            if(tokens.length<2){
+              query = query.where('summary.localname').exists()
+            }
+            else{
+              query = query.where('summary.localname').regex((new RegExp(term, 'i')))   //TODO - needs $contains support
+
+            }
+            
             
             debug('term['+term+']')
     
             break
           case 'company':
             debug('select by company', tokens)
-            query = query.where('summary.company').equals(term)   //TODO - needs $contains support
+            if(tokens.length<2){
+              query = query.where('summary.company').exists()
+            }
+            else{
+              query = query.where('summary.company').regex(new RegExp(term, 'i'))   //TODO - needs $contains support
+            }
             break
     
           case 'product':
             debug('select by product', tokens)
-            
-            query = query.where('summary.product').equals(term)   //TODO - needs $contains support
+            if(tokens.length<2){
+              query = query.where('summary.product').exists()
+            }
+            else{
+              query = query.where('summary.product').regex(new RegExp(term, 'i'))   //TODO - needs $contains support
+            }
             break
     
           case 'unknown':
           case 'unknown-service':
-            query = where('summary.unknownServices').exists()
+            query = query.where('summary.hasUnknownService').exists()
+              .where('summary.hasUnknownService').equals(true)
             break
           case 'service':
             const serviceTerm = tokens[1]
             debug('select by service', serviceTerm)
-            let possibleServices = RFParty.reverseLookupService(serviceTerm)
-            debug('possible', possibleServices)
+
+
+            let specialQuery = null
+            if(tokens.slice(2).length > 0){
+              specialQuery = this.parseServiceSearch(query, serviceTerm.toLowerCase(), tokens.slice(2))
+            }
+            
+            if(!specialQuery){
+              let possibleServices = UUIDParser.reverseLookupService(serviceTerm)
+              debug('possible', possibleServices)
+              console.log('possible', possibleServices)
+              query = query.where('summary.serviceUuids.results').in(...possibleServices)
+            }
+            else{
+              query = specialQuery
+            }
+
             /*query = {
               'services':  {'$containsAny':  possibleServices },
               ...this.parseServiceSearch(serviceTerm.toLowerCase(), tokens.slice(2))
@@ -308,10 +346,10 @@ export class RFParty extends EventEmitter {
           case 'appleIp':
             debug('select by appleIp', tokens)
             if(tokens.length < 2){
-              query = query.exists('summary.appleContinuity.service.airplay.ip').exists()
+              query = query.where('summary.appleContinuity.service.airplay.ip').exists()
             }
             else{
-              query = query.exists('summary.appleContinuity.service.airplay.ip').equals(tokens)
+              query = query.where('summary.appleContinuity.service.airplay.ip').regex(new RegExp(term, 'i'))
             }
             break
     
@@ -337,7 +375,7 @@ export class RFParty extends EventEmitter {
             break
   
           case 'error':
-            query = query.exists('summary.appleContinuity.lasterror').exists()
+            query = query.where('summary.appleContinuity.protocolError').exists()
             break
     
           default:
@@ -420,20 +458,20 @@ export class RFParty extends EventEmitter {
   }
 
 
-  parseServiceSearch(service, terms){
-    let query = {}
+  parseServiceSearch(query, service, terms){
     
-    if(terms.length==0){ return }
+    if(terms.length==0){ return null }
 
     switch(service){
       case 'ibeacon':
-        query = { 'ibeacon.uuid': { $contains: terms[0] } }
+        query = query.where('summary.appleContinuity.ibeacon.uuid').exists()
+        //  .where('summary.appleContinuity.ibeacon.uuid').regex( new RegExp(terms[0], 'i'))
         break
       case 'findmy':
-        query = { 'findmy.maintained': { $eq: terms[0] == 'found'}}
+        query = query.where('summary.appleContinuity.findmy.maintained').equals( terms[0] == 'found' )
         break
       default:
-        break
+        return null
     }
 
     return query
@@ -642,17 +680,22 @@ export class RFParty extends EventEmitter {
       debug('details viewer JSON - ', JSON.stringify(device.cleanData))
 
       let packets = []
+      let seen = 0
       
       for(let adv of devAdv){
-        let gap = adv.parsePacket()
-        packets.push(gap)
+        //adv.parsePacket()
+        console.log(adv.cleanData)
+        seen += adv.data.packet.seen
+        if(adv.data.packet.parsed){
+          packets.push(adv.data.packet.parsed)
+        }
       }
 
 
       const content = {
         packets,
         base64: device.cleanData.packet.base64,
-        seen: device.cleanData.packet.seen
+        seen
       }
 
       this.detailsViewer = new JSONViewer({

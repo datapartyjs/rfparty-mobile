@@ -49,20 +49,19 @@ function hexString(arrayBuffer){
 }
 
 const SearchSuggestions = {
-  help: false,
-  address: 'mac',
+  //help: false,
   here: false,
   name: true,
   company: true,
+  address: 'mac',
   product: true,
   service: ['name','0x...', 'company', 'product'],
-  unknown: false,
   'unknown-service': false,
   appleip: 'ip',
-  random: false,
-  public: false,
-  connectable: false,
-  duration: ['period'],
+  //random: false,
+  //public: false,
+  //connectable: false,
+  duration: ['48h', '15m'],
   error: false
 }
 
