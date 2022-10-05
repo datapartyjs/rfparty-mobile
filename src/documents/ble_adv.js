@@ -5,6 +5,8 @@ const debug=require('debug')('rfparty.ble_adv')
 
 const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 
+const BleObs = require('./ble_obs')
+
 const GeoUtils = require('../geo-utils')
 
 import {GapParser} from '../gap-parser'
@@ -45,33 +47,40 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
       bleAdvDoc = await BleAdvDocument.createFromBleDevice(party, dev, packetHash, point)
       debug('created', bleAdvDoc.data)
 
-      await bleAdvDoc.save()
+      const currentRssi = {
+        rssi: dev.rssi,
+        time: now,
+        hash: packetHash
+      }
+      
+      await Promise.all([
+        bleAdvDoc.save(),
+        BleObs.indexBleObs(party, currentRssi)
+      ])
 
       return bleAdvDoc
     }
 
     debug('indexBleDevice', bleAdvDoc.data)
 
-    if(!bleAdvDoc.data.packet.seen){
-      bleAdvDoc.data.packet.seen=[]
-    }
-
     const currentRssi = {
       rssi: dev.rssi,
-      time: now
+      time: now,
+      hash: packetHash
     }
-
-    bleAdvDoc.data.packet.seen.push(currentRssi)
-
-
-
+    
     bleAdvDoc.data.geobounds = GeoUtils.updatGeoBoundsByPoint(bleAdvDoc.data.geobounds, point)
     bleAdvDoc.data.location = GeoUtils.updateLocationBounds(bleAdvDoc.data.location, point)
     bleAdvDoc.data.timebounds = GeoUtils.updateTimebounds(bleAdvDoc.data.timebounds, now)
     bleAdvDoc.data.best = GeoUtils.updateBestRssi(bleAdvDoc.data.best, currentRssi)
     bleAdvDoc.data.worst = GeoUtils.updateWorstRssi(bleAdvDoc.data.worst, currentRssi)
+    bleAdvDoc.data.packet.seen++
+    
+    await Promise.all([
+      bleAdvDoc.save(),
+      BleObs.indexBleObs(party, currentRssi)
+    ])
 
-    await bleAdvDoc.save()
 
     return bleAdvDoc
   }
@@ -84,10 +93,6 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
     debug('create')
 
     const now = moment().valueOf()
-    const currentRssi = {
-      rssi: dev.rssi,
-      time: now
-    }
 
     const loc = !point ? undefined : {
       lat: point.latitude,
@@ -101,7 +106,7 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
       packet: {
         hash: packetHash,
         base64: dev.advertising.data,
-        seen: [currentRssi]
+        seen: 1
       },
 
       timebounds: {

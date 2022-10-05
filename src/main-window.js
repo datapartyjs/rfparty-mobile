@@ -571,7 +571,7 @@ export class MainWindow {
     BackgroundGeolocation.configure({
       startOnBoot: false,
       notificationsEnabled: false,
-      maxLocations: 30,
+      //maxLocations: 30,
       locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
       stationaryRadius: 5,
@@ -579,7 +579,7 @@ export class MainWindow {
       notificationTitle: 'rfparty',
       notificationText: 'partying in background',
       debug: false,
-      interval: 30000,
+      interval: 10000,
       fastestInterval: 1000,
       activitiesInterval: 10000,
     })
@@ -1124,6 +1124,8 @@ export class MainWindow {
     const party = window.rfparty.party
 
     let collectionNames = await party.db.getCollectionNames()
+
+    console.log(collectionNames)
 
     for(let name of collectionNames){
 

@@ -1,7 +1,7 @@
 {
   "name": "xyz.dataparty.rfparty",
   "displayName": "rfparty",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "A bluetooth tricorder",
   "source": "./index.html",
   "scripts": {

@@ -6,6 +6,8 @@ const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 
 const GeoUtils = require('../geo-utils')
 
+const GeoPoint = require('./geo_point')
+
 module.exports = class GeoTrackDocument extends Dataparty.IDocument {
   constructor({ party, type, id, data }) {
     super({ party, type, id, data })
@@ -14,7 +16,7 @@ module.exports = class GeoTrackDocument extends Dataparty.IDocument {
 
   static async indexGeoPoint(party, point){
 
-    let prev = moment().subtract(15, 'min')
+    let prev = moment().subtract(15, 'minutes')
 
     let tracks = (await party.find()
       .type('geo_track')
@@ -30,18 +32,25 @@ module.exports = class GeoTrackDocument extends Dataparty.IDocument {
       track = await GeoTrackDocument.createFromGeoPoint(party, point)
       debug('created', track)
 
-      await track.save()
-      return
+      await Promise.all([
+        track.save(),
+        GeoPoint.indexGeoPoint(party, point)
+      ])
+  
+      return track
     }
 
     debug('indexGeoPoint', track)
 
-    track.data.points.push(point)
     track.data.geobounds = GeoUtils.updatGeoBoundsByPoint(track.data.geobounds, point)
     track.data.location = GeoUtils.updateLocationBounds(track.data.location, point)
     track.data.timebounds = GeoUtils.updateTimebounds(track.data.timebounds, point.time)
+    track.data.points++
 
-    await track.save()
+    await Promise.all([
+      track.save(),
+      GeoPoint.indexGeoPoint(party, point)
+    ])
 
     return track
   }
@@ -68,7 +77,8 @@ module.exports = class GeoTrackDocument extends Dataparty.IDocument {
 
       geobounds: { min: loc, max: loc },
 
-      points: [point]
+      points: 1
+
     })
   }
 }

@@ -20,6 +20,7 @@ exports.LocationIndexed = {
 
 exports.GapField = {
   type: {type: String},
+  value: Object,
   raw: {
     data: String,
     data_length: Number,
@@ -42,7 +43,7 @@ exports.BleParsedAdv = {
   company: {type: String, index: true},
   companyCode: Utils.string(2,2),
 
-  name: {type:String, index: true},
+  localname: {type:String, index: true},
 
   appleContinuity:{
     typeCode: String,
@@ -94,10 +95,17 @@ exports.BlePacket = {
   base64: String,
   gapFields: [exports.GapField],
   parsed: exports.BleParsedAdv,
-  seen: [{
+  seen: {type: Number, index: true}
+  /*seen: [{
     rssi: Number,
     time: Utils.created
-  }]
+  }]*/
+}
+
+exports.BleObservation = {
+  rssi: Number,
+  time: {type:Number, index: true},
+  hash: {type: String, index: true}   //packet hash
 }
 
 exports.GeoBoundsIndexed = {
@@ -155,6 +163,23 @@ exports.GeoPoint = {
   mockLocationsEnabled: Boolean,
 }
 
+exports.GeoPointIndexed = {
+  time: {type:Number, index: true},
+  accuracy: Number,
+  altitude: Number,
+  bearing: Number,
+  latitude: {type:Number, index: true},
+  longitude: {type:Number, index: true},
+  speed: Number,
+
+  isStationary: Boolean,
+  
+  provider: String,
+  locationProvider: Number,
+  isFromMockProvider: Boolean,
+  mockLocationsEnabled: Boolean,
+}
+
 exports.GeoTrackInfo = {
   //source: Utils.actor(['ble_source'], {indexId:true}),
   created: Utils.created,
@@ -165,7 +190,9 @@ exports.GeoTrackInfo = {
 
   geobounds: exports.GeoBoundsIndexed,
 
-  points: [exports.GeoPoint]
+  points: {type: Number, index: true}
+
+  //points: [exports.GeoPoint]
 }
 
 exports.ActivityInfo = {
