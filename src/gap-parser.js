@@ -2,12 +2,12 @@ import { UUIDParser } from './parsers/uuid-parser'
 
 const GAP_TYPES = {
   0x01: {decode:'hex', name: 'Flags'},
-  0x02: {decode:'hex', parser: UUIDParser.decode16bitUuid, name: 'ServiceClassUUIDs'},  //Incomplete 16-bit list
-  0x03: {decode:'hex', parser: UUIDParser.decode16bitUuid, name: 'ServiceClassUUIDs'},  //Complete 16-bit list
-  0x04: {decode:'hex', name: 'ServiceClassUUIDs'},  //Incomplete 32-bit list
-  0x05: {decode:'hex', name: 'ServiceClassUUIDs'},  //Complete 32-bit list
-  0x06: {decode:'hex', name: 'ServiceClassUUIDs'},  //Incomplete 128-bit list
-  0x07: {decode:'hex', name: 'ServiceClassUUIDs'},  //Complete 128-bit list
+  0x02: {decode:'hex', parser: UUIDParser.decode16bitUuidList, name: 'ServiceClassUUIDs'},  //Incomplete 16-bit list
+  0x03: {decode:'hex', parser: UUIDParser.decode16bitUuidList, name: 'ServiceClassUUIDs'},  //Complete 16-bit list
+  0x04: {decode:'hex', parser: UUIDParser.decode32bitUuidList, name: 'ServiceClassUUIDs'},  //Incomplete 32-bit list
+  0x05: {decode:'hex', parser: UUIDParser.decode32bitUuidList, name: 'ServiceClassUUIDs'},  //Complete 32-bit list
+  0x06: {decode:'hex', parser: UUIDParser.decode128bitUuidList, name: 'ServiceClassUUIDs'},  //Incomplete 128-bit list
+  0x07: {decode:'hex', parser: UUIDParser.decode128bitUuidList, name: 'ServiceClassUUIDs'},  //Complete 128-bit list
   0x08: {decode:'utf8', name: 'LocalName'},          //Shortened local name
   0x09: {decode:'utf8', name: 'LocalName'},          //Complete local name
   0x0A: {decode:'hex', name: 'TxPower'},
@@ -17,9 +17,9 @@ const GAP_TYPES = {
   0x10: {decode:'hex', name: 'DeviceID'},     //0x10: 'SecurityManagerTK',
   0x11: {decode:'hex', name: 'SecurityManagerOutOfBandFlags'},
   0x12: {decode:'hex', name: 'SlaveConnectionIntervalRange'},
-  0x14: {decode:'hex', name: 'ServiceUUIDs'},       //16bit list
-  0x15: {decode:'hex', name: 'ServiceUUIDs'},       //128bit list
-  0x16: {decode:'hex', name: 'ServiceData'},        // 16bit uuid + data
+  0x14: {decode:'hex', parser: UUIDParser.decode16bitUuidList, name: 'ServiceUUIDs'},       //16bit list
+  0x15: {decode:'hex', parser: UUIDParser.decode128bitUuidList, name: 'ServiceUUIDs'},       //128bit list
+  0x16: {decode:'hex', parser: UUIDParser.decode16bitServiceData, name: 'ServiceData'},        // 16bit uuid + data
   0x17: {decode:'hex', name: 'PublicTargetAddress'},
   0x18: {decode:'hex', name: 'RandomTargetAddress'},
   0x19: {decode:'hex', name: 'Appearance'},
@@ -28,9 +28,9 @@ const GAP_TYPES = {
   0x1C: {decode:'hex', name: 'LERole'},
   0x1D: {decode:'hex', name: 'SimplePairingHash'},      //256
   0x1E: {decode:'hex', name: 'SimplePairingRandomizer'},//256
-  0x1F: {decode:'hex', name: 'ServiceUUIDs'},      //32 bit list
-  0x20: {decode:'hex', name: 'ServiceData'},       //32bit uuid + data
-  0x21: {decode:'hex', name: 'ServiceData'},       //128bit uuid + data
+  0x1F: {decode:'hex', parser: UUIDParser.decode32bitUuidList, name: 'ServiceUUIDs'},      //32 bit list
+  0x20: {decode:'hex', parser: UUIDParser.decode32bitServiceData, name: 'ServiceData'},       //32bit uuid + data
+  0x21: {decode:'hex', parser: UUIDParser.decode128bitServiceData, name: 'ServiceData'},       //128bit uuid + data
   0x22: {decode:'hex', name: 'LESecureConnectionsConfirmationValue'},
   0x23: {decode:'hex', name: 'LESecureConnectionsRandomValue'},
   0x24: {decode:'hex', name: 'URI'},
@@ -134,7 +134,16 @@ export class GapParser{
     const obj = {}
 
     for(let field of fields){
-      obj[field.type] = field
+      if(!obj[field.type]){
+        obj[field.type] = field
+      }
+      else if(Array.isArray(obj[field.type])){
+        obj[field.type].push(field)
+      }
+      else{
+        obj[field.type] = [ obj[field.type] ]
+        obj[field.type].push(field)
+      }
     }
 
     return obj

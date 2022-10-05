@@ -26,8 +26,29 @@ export class UUIDParser {
     }
   }
 
+  static lookupDeviceUuids(uuids){
+    let results = []
+    for(let uuid of uuids){
+      let value = UUIDParser.lookupDeviceUuid(uuid)
+
+      if(!value){continue}
+
+      if(results.indexOf(value) == -1){
+        results.push(value)
+      }
+    }
+
+    if(results.length == 0){
+      return null
+    }
+
+    return results
+  }
+
   static lookupDeviceUuid(uuid){
     let deviceType = null
+
+    console.log('lookup uuid', uuid, 'type', typeof uuid, 'length', uuid.length)
 
     if(uuid.length == 4){
       //deviceType = DeviceIdentifiers.UUID16[uuid]
@@ -46,7 +67,7 @@ export class UUIDParser {
 
     const types = Object.keys(UUID16_TABLES)
 
-    for(let type of types){ 
+    for(let type of types){
       possibles.push( 
         ...(UUIDParser.reverseLookupByName(
             UUID16_TABLES[type], term, '/'+type+'/'
@@ -75,11 +96,65 @@ export class UUIDParser {
 
     return names
   }
-  
-  static decode16bitUuid(field){
-    let uuid = field.raw.data.reverse().toString('hex')
 
-    field.raw.data = uuid
-    field.value = UUIDParser.lookupDeviceUuid(uuid) || uuid
+  static bufferToList(buffer, byteSize=2){
+    let list = []
+    
+    let idx = 0;
+    while(idx<buffer.length){
+      
+      let value = buffer.subarray(idx, idx+byteSize)
+
+      list.push(value)
+
+      idx+=byteSize
+    }
+
+    return list
+  }
+
+  static decodeUuidList(field, byteSize){
+    let uuids = UUIDParser.bufferToList( field.raw.data, byteSize )
+      .map( buf=>{
+        return buf.reverse().toString('hex')
+      })
+
+    field.raw.data = field.raw.data.toString('hex')
+    field.value = uuids
+  }
+
+  static decode16bitUuidList(field){
+    return UUIDParser.decodeUuidList(field, 2)
+  }
+
+  static decode32bitUuidList(field){
+    return UUIDParser.decodeUuidList(field, 4)
+  }
+
+  static decode128bitUuidList(field){
+    return UUIDParser.decodeUuidList(field, 16)
+  }
+
+
+  static decodeServiceData(field, byteSize){
+    let uuid = field.raw.data.subarray(0, byteSize).reverse().toString('hex')
+    let data = field.raw.data.subarray(byteSize).toString('hex')
+
+    field.raw.data = field.raw.data.toString('hex')
+    field.value = {
+      [uuid]: data
+    }
+  }
+
+  static decode16bitServiceData(field){
+    UUIDParser.decodeServiceData(field, 2)
+  }
+
+  static decode32bitServiceData(field){
+    UUIDParser.decodeServiceData(field, 4)
+  }
+
+  static decode128bitServiceData(field){
+    UUIDParser.decodeServiceData(field, 16)
   }
 }

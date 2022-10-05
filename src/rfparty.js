@@ -101,10 +101,8 @@ export class RFParty extends EventEmitter {
     })
 
     Leaflet.tileLayer(TILE_SERVER_MAPBOX, TILE_SERVER_MAPBOX_CONFIG).addTo(this.map);
-    //Leaflet.control.attribution({prefix: '<span id="map-attribution" class="map-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></span>' })
-    //  .addTo(this.map)
 
-    //this.map.setView([ 0, ], 17)
+
     this.positionCircle = Leaflet.circle([0,0], { color: 'orange', fill:false, weight:1, opacity: 0.9 }).addTo(this.map)
 
     debug('rfparty constructor')
@@ -538,12 +536,12 @@ export class RFParty extends EventEmitter {
   }
 
   async getBLEDevice(mac){
-    let station = (await this.party.find().type('ble_adv')
+    let adv = (await this.party.find().type('ble_adv')
       .where('address').equals(mac)
-      .limit(1)
-      .exec())[0]
+      //.limit(1)
+      .exec())
 
-    return station
+    return adv
   }
 
   async updateDeviceInfoHud(){
@@ -555,8 +553,8 @@ export class RFParty extends EventEmitter {
     } else {
       
       
-
-      let device = await this.getBLEDevice(devices[0])
+      let devAdv = await this.getBLEDevice(devices[0])
+      let device = devAdv[0]
 
       debug('updateDeviceInfoHud', device)
 
@@ -643,10 +641,16 @@ export class RFParty extends EventEmitter {
 
       debug('details viewer JSON - ', JSON.stringify(device.cleanData))
 
-      let gap = device.parsePacket()
+      let packets = []
+      
+      for(let adv of devAdv){
+        let gap = adv.parsePacket()
+        packets.push(gap)
+      }
+
 
       const content = {
-        gap, 
+        packets,
         base64: device.cleanData.packet.base64,
         seen: device.cleanData.packet.seen
       }
@@ -688,6 +692,7 @@ export class RFParty extends EventEmitter {
         return
       }
 
+      /*
       let devAdvs = (await this.party.find().type('ble_adv').where('address').equals(station.data.address).exec())
 
       let devAdv = devAdvs[0]
@@ -697,6 +702,7 @@ export class RFParty extends EventEmitter {
         return }
 
       let devicePathLL = []
+
 
       let trackPointQuery = []
       
@@ -745,7 +751,7 @@ export class RFParty extends EventEmitter {
           })
         })
         layer.addLayer(line)
-      }
+      }*/
 
 
       if(!event.originalEvent.shiftKey){
