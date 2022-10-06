@@ -97,7 +97,7 @@ module.exports = class BleAdvDocument extends Dataparty.IDocument {
 
       bleAdvDoc.parsePacket()
 
-      console.log(bleAdvDoc.cleanData)
+      //console.log(bleAdvDoc.cleanData)
 
       const currentRssi = {
         rssi: dev.rssi,

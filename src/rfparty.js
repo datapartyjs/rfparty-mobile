@@ -327,9 +327,9 @@ export class RFParty extends EventEmitter {
             }
             
             if(!specialQuery){
-              let possibleServices = UUIDParser.reverseLookupService(serviceTerm)
-              debug('possible', possibleServices)
-              console.log('possible', possibleServices)
+              //let possibleServices = UUIDParser.reverseLookupService(serviceTerm)
+              //debug('possible', possibleServices)
+              //console.log('possible', possibleServices)
               query = query.where('summary.serviceUuids.results').regex(new RegExp(serviceTerm, 'i'))
             }
             else{
@@ -688,7 +688,7 @@ export class RFParty extends EventEmitter {
       
       for(let adv of devAdv){
         //adv.parsePacket()
-        console.log(adv.cleanData)
+        //console.log(adv.cleanData)
         seen += adv.data.packet.seen
         if(adv.data.packet.parsed){
           packets.push(adv.data.packet.parsed)
