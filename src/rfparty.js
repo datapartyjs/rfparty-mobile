@@ -330,7 +330,7 @@ export class RFParty extends EventEmitter {
               let possibleServices = UUIDParser.reverseLookupService(serviceTerm)
               debug('possible', possibleServices)
               console.log('possible', possibleServices)
-              query = query.where('summary.serviceUuids.results').in(...possibleServices)
+              query = query.where('summary.serviceUuids.results').regex(new RegExp(serviceTerm, 'i'))
             }
             else{
               query = specialQuery
@@ -582,7 +582,7 @@ export class RFParty extends EventEmitter {
     return adv
   }
 
-  async updateDeviceInfoHud(){
+  async updateDeviceInfoHud(station){
     let devices = Object.keys( this.deviceLayers )
     if(devices.length == 0){
       window.MainWindow.hideDiv('device-info')
@@ -603,28 +603,28 @@ export class RFParty extends EventEmitter {
 
       let companyText = ''
 
-      if(reach(device, 'data.summary.parsed.company')){
-        if(!reach(device,'data.summary.parsed.companyCode')){
-          companyText=reach(device, 'data.summary.parsed.company') 
+      if(reach(station, 'data.summary.company')){
+        if(!reach(station,'data.summary.companyCode')){
+          companyText=reach(station, 'data.summary.company') 
         } else {
-          companyText=reach(device, 'data.summary.parsed.company') + '(' + reach(device, 'data.summary.parsed.companyCode') + ')'
+          companyText=reach(station, 'data.summary.company') + '(' + reach(station, 'data.summary.companyCode') + ')'
         }
       }
-      else if(reach(device, 'data.summary.parsed.companyCode')){
-        companyText='Unknown Company' + '(0x' + reach(device, 'data.summary.parsed.companyCode') + ')'
+      else if(reach(station, 'data.summary.companyCode')){
+        companyText='Unknown Company' + '(0x' + reach(station, 'data.summary.companyCode') + ')'
       }
 
-      if(reach(device, 'data.summary.parsed.product')){
+      if(reach(station, 'data.summary.product')){
         if(companyText.length > 0){
           companyText+='\n'
         }
-        companyText+=reach(device, 'data.summary.parsed.product')
+        companyText+=reach(station, 'data.summary.product')
       }
 
-      document.getElementById('device-info-address').textContent = reach(device, 'data.address')
+      document.getElementById('device-info-address').textContent = reach(station, 'data.address')
 
-      if(reach(device, 'advertisement.localName')){
-        document.getElementById('device-info-name').textContent = reach(device, 'data.summary.parsed.name')
+      if(reach(station, 'data.summary.localname')){
+        document.getElementById('device-info-name').textContent = reach(station, 'data.summary.localname')
         window.MainWindow.showDiv('device-info-name')
       }
       else{
@@ -634,46 +634,50 @@ export class RFParty extends EventEmitter {
 
       document.getElementById('device-info-company').textContent = companyText
 
-      document.getElementById('device-info-duration').textContent = moment.duration(device.data.timebounds.duration).humanize()
+      document.getElementById('device-info-duration').textContent = moment.duration(station.data.timebounds.duration).humanize()
 
 
 
       let serviceText = ''
 
-      if(reach(device, 'appleContinuityTypeCode')){
-        let appleService = RFParty.lookupAppleService( device.appleContinuityTypeCode)
+      if(reach(station, 'data.summary.appleContinuity.typeCode')){
+        let appleService = RFParty.lookupAppleService( station.data.summary.appleContinuity.typeCode)
         if(appleService){
-          serviceText+=  'Apple ' + appleService + '(0x' + device.appleContinuityTypeCode + '); \n'
+          serviceText+=  'Apple ' + appleService + '(0x' + station.data.summary.appleContinuity.typeCode + '); \n'
         }
         else{
-          serviceText+=  'Apple ' + '0x' + device.appleContinuityTypeCode + '; \n'
+          serviceText+=  'Apple ' + '0x' + station.data.summary.appleContinuity.typeCode + '; \n'
         }
       }
       
 
-      if(reach(device, 'appleIp')){
-        serviceText+=  'Apple IP ' + device.appleIp + '; \n'
+      if(reach(station, 'data.summary.appleContinuity.service.airplay.ip')){
+        serviceText+=  'Apple IP ' + station.data.summary.appleContinuity.service.airplay.ip + '; \n'
       }
 
-      /*
-      device.data.packet.parsed.services.serviceUuids.map(uuid=>{
-        let name = RFParty.lookupDeviceUuid(uuid)
+      if(reach(station, 'data.summary.serviceUuids')){
 
-        if(name){
-          serviceText += name + '(0x' + uuid + '); \n'
-        } else {
-          serviceText += '0x' + uuid + '; \n'
-        }
-      })
+        let uuids = [...new Set([...station.data.summary.serviceUuids.known, ...station.data.summary.serviceUuids.unknown]) ]
+        
+        uuids.map(uuid=>{
+          let name = RFParty.lookupDeviceUuid(uuid)
+  
+          if(name){
+            serviceText += name + '(0x' + uuid + '); \n'
+          } else {
+            serviceText += '0x' + uuid + '; \n'
+          }
+        })
+      }
 
       document.getElementById('device-info-services').textContent = serviceText
-      */
+
 
 
 
       let details = document.getElementById('device-info-detailscontainer')
 
-      details.textContent = JSON.stringify(device.cleanData,null,2)
+      //details.textContent = JSON.stringify(device.cleanData,null,2)
 
       while (details.firstChild) { details.removeChild(details.firstChild) }
 
@@ -704,9 +708,6 @@ export class RFParty extends EventEmitter {
         theme: 'dark',
         expand: false
       })
-      //
-
-      //! @todo
 
       window.MainWindow.showDiv('device-info')
       
@@ -809,7 +810,7 @@ export class RFParty extends EventEmitter {
       this.deviceLayers[ value ] = layer
       layer.addTo(this.map)
 
-      await this.updateDeviceInfoHud()
+      await this.updateDeviceInfoHud(station)
     }
 
     

@@ -38,7 +38,7 @@ exports.BleParsedAdv = {
   gapTypes: [String],
   gapFields: [Object],
   serviceUuids: {
-    results: [String],
+    results: [{type:String, index:true}],
     known: [String],
     unknown: [String]
   },
