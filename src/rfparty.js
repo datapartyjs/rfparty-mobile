@@ -19,6 +19,7 @@ const RFPartyDocuments = require('./documents')
 
 import * as UUID16_TABLES from './16bit-uuid-tables'
 import * as MANUFACTURER_TABLE from './manufacturer-company-id.json' 
+import { UUIDParser } from './parsers/uuid-parser'
 const DeviceIdentifiers = require('./device-identifiers')
 
 const JSONViewer = require('json-viewer-js/src/jsonViewer')
@@ -229,13 +230,18 @@ export class RFParty extends EventEmitter {
 
       try{
 
-        const tokens = input.split(' ')
+        const tokens = input.trim().split(' ')
   
         let term = tokens.slice(1).join(' ')
         switch(tokens[0].toLowerCase()){
           case 'mac':
           case 'address':
-            query = query.where('address').equals(term)   //TODO - needs $contains support
+            if(tokens.length < 2){
+              query = query.where('address').exists()
+            }
+            else{
+              query = query.where('address').regex(new RegExp(term, 'i'))   //TODO - needs $contains support
+            }
             break
           case 'here':
             let viewport = this.map.getBounds()
@@ -272,32 +278,64 @@ export class RFParty extends EventEmitter {
             break*/
           case 'name':
           case 'localname':
-            debug('select by name', tokens)
-            query = query.where('summary.name').equals(term)   //TODO - needs $contains support
+            debug('select by localname', tokens)
+            if(tokens.length<2){
+              query = query.where('summary.localname').exists()
+            }
+            else{
+              query = query.where('summary.localname').regex((new RegExp(term, 'i')))   //TODO - needs $contains support
+
+            }
+            
             
             debug('term['+term+']')
     
             break
           case 'company':
             debug('select by company', tokens)
-            query = query.where('summary.company').equals(term)   //TODO - needs $contains support
+            if(tokens.length<2){
+              query = query.where('summary.company').exists()
+            }
+            else{
+              query = query.where('summary.company').regex(new RegExp(term, 'i'))   //TODO - needs $contains support
+            }
             break
     
           case 'product':
             debug('select by product', tokens)
-            
-            query = query.where('summary.product').equals(term)   //TODO - needs $contains support
+            if(tokens.length<2){
+              query = query.where('summary.product').exists()
+            }
+            else{
+              query = query.where('summary.product').regex(new RegExp(term, 'i'))   //TODO - needs $contains support
+            }
             break
     
           case 'unknown':
           case 'unknown-service':
-            query = where('summary.unknownServices').exists()
+            query = query.where('summary.hasUnknownService').exists()
+              .where('summary.hasUnknownService').equals(true)
             break
           case 'service':
             const serviceTerm = tokens[1]
             debug('select by service', serviceTerm)
-            let possibleServices = RFParty.reverseLookupService(serviceTerm)
-            debug('possible', possibleServices)
+
+
+            let specialQuery = null
+            if(tokens.slice(2).length > 0){
+              specialQuery = this.parseServiceSearch(query, serviceTerm.toLowerCase(), tokens.slice(2))
+            }
+            
+            if(!specialQuery){
+              let possibleServices = UUIDParser.reverseLookupService(serviceTerm)
+              debug('possible', possibleServices)
+              console.log('possible', possibleServices)
+              query = query.where('summary.serviceUuids.results').regex(new RegExp(serviceTerm, 'i'))
+            }
+            else{
+              query = specialQuery
+            }
+
             /*query = {
               'services':  {'$containsAny':  possibleServices },
               ...this.parseServiceSearch(serviceTerm.toLowerCase(), tokens.slice(2))
@@ -308,10 +346,10 @@ export class RFParty extends EventEmitter {
           case 'appleIp':
             debug('select by appleIp', tokens)
             if(tokens.length < 2){
-              query = query.exists('summary.appleContinuity.service.airplay.ip').exists()
+              query = query.where('summary.appleContinuity.service.airplay.ip').exists()
             }
             else{
-              query = query.exists('summary.appleContinuity.service.airplay.ip').equals(tokens)
+              query = query.where('summary.appleContinuity.service.airplay.ip').regex(new RegExp(term, 'i'))
             }
             break
     
@@ -337,7 +375,7 @@ export class RFParty extends EventEmitter {
             break
   
           case 'error':
-            query = query.exists('summary.appleContinuity.lasterror').exists()
+            query = query.where('summary.appleContinuity.protocolError').exists()
             break
     
           default:
@@ -420,20 +458,20 @@ export class RFParty extends EventEmitter {
   }
 
 
-  parseServiceSearch(service, terms){
-    let query = {}
+  parseServiceSearch(query, service, terms){
     
-    if(terms.length==0){ return }
+    if(terms.length==0){ return null }
 
     switch(service){
       case 'ibeacon':
-        query = { 'ibeacon.uuid': { $contains: terms[0] } }
+        query = query.where('summary.appleContinuity.ibeacon.uuid').exists()
+        //  .where('summary.appleContinuity.ibeacon.uuid').regex( new RegExp(terms[0], 'i'))
         break
       case 'findmy':
-        query = { 'findmy.maintained': { $eq: terms[0] == 'found'}}
+        query = query.where('summary.appleContinuity.findmy.maintained').equals( terms[0] == 'found' )
         break
       default:
-        break
+        return null
     }
 
     return query
@@ -544,7 +582,7 @@ export class RFParty extends EventEmitter {
     return adv
   }
 
-  async updateDeviceInfoHud(){
+  async updateDeviceInfoHud(station){
     let devices = Object.keys( this.deviceLayers )
     if(devices.length == 0){
       window.MainWindow.hideDiv('device-info')
@@ -565,28 +603,28 @@ export class RFParty extends EventEmitter {
 
       let companyText = ''
 
-      if(reach(device, 'data.summary.parsed.company')){
-        if(!reach(device,'data.summary.parsed.companyCode')){
-          companyText=reach(device, 'data.summary.parsed.company') 
+      if(reach(station, 'data.summary.company')){
+        if(!reach(station,'data.summary.companyCode')){
+          companyText=reach(station, 'data.summary.company') 
         } else {
-          companyText=reach(device, 'data.summary.parsed.company') + '(' + reach(device, 'data.summary.parsed.companyCode') + ')'
+          companyText=reach(station, 'data.summary.company') + '(' + reach(station, 'data.summary.companyCode') + ')'
         }
       }
-      else if(reach(device, 'data.summary.parsed.companyCode')){
-        companyText='Unknown Company' + '(0x' + reach(device, 'data.summary.parsed.companyCode') + ')'
+      else if(reach(station, 'data.summary.companyCode')){
+        companyText='Unknown Company' + '(0x' + reach(station, 'data.summary.companyCode') + ')'
       }
 
-      if(reach(device, 'data.summary.parsed.product')){
+      if(reach(station, 'data.summary.product')){
         if(companyText.length > 0){
           companyText+='\n'
         }
-        companyText+=reach(device, 'data.summary.parsed.product')
+        companyText+=reach(station, 'data.summary.product')
       }
 
-      document.getElementById('device-info-address').textContent = reach(device, 'data.address')
+      document.getElementById('device-info-address').textContent = reach(station, 'data.address')
 
-      if(reach(device, 'advertisement.localName')){
-        document.getElementById('device-info-name').textContent = reach(device, 'data.summary.parsed.name')
+      if(reach(station, 'data.summary.localname')){
+        document.getElementById('device-info-name').textContent = reach(station, 'data.summary.localname')
         window.MainWindow.showDiv('device-info-name')
       }
       else{
@@ -596,63 +634,72 @@ export class RFParty extends EventEmitter {
 
       document.getElementById('device-info-company').textContent = companyText
 
-      document.getElementById('device-info-duration').textContent = moment.duration(device.data.timebounds.duration).humanize()
+      document.getElementById('device-info-duration').textContent = moment.duration(station.data.timebounds.duration).humanize()
 
 
 
       let serviceText = ''
 
-      if(reach(device, 'appleContinuityTypeCode')){
-        let appleService = RFParty.lookupAppleService( device.appleContinuityTypeCode)
+      if(reach(station, 'data.summary.appleContinuity.typeCode')){
+        let appleService = RFParty.lookupAppleService( station.data.summary.appleContinuity.typeCode)
         if(appleService){
-          serviceText+=  'Apple ' + appleService + '(0x' + device.appleContinuityTypeCode + '); \n'
+          serviceText+=  'Apple ' + appleService + '(0x' + station.data.summary.appleContinuity.typeCode + '); \n'
         }
         else{
-          serviceText+=  'Apple ' + '0x' + device.appleContinuityTypeCode + '; \n'
+          serviceText+=  'Apple ' + '0x' + station.data.summary.appleContinuity.typeCode + '; \n'
         }
       }
       
 
-      if(reach(device, 'appleIp')){
-        serviceText+=  'Apple IP ' + device.appleIp + '; \n'
+      if(reach(station, 'data.summary.appleContinuity.service.airplay.ip')){
+        serviceText+=  'Apple IP ' + station.data.summary.appleContinuity.service.airplay.ip + '; \n'
       }
 
-      /*
-      device.data.packet.parsed.services.serviceUuids.map(uuid=>{
-        let name = RFParty.lookupDeviceUuid(uuid)
+      if(reach(station, 'data.summary.serviceUuids')){
 
-        if(name){
-          serviceText += name + '(0x' + uuid + '); \n'
-        } else {
-          serviceText += '0x' + uuid + '; \n'
-        }
-      })
+        let uuids = [...new Set([...station.data.summary.serviceUuids.known, ...station.data.summary.serviceUuids.unknown]) ]
+        
+        uuids.map(uuid=>{
+          let name = RFParty.lookupDeviceUuid(uuid)
+  
+          if(name){
+            serviceText += name + '(0x' + uuid + '); \n'
+          } else {
+            serviceText += '0x' + uuid + '; \n'
+          }
+        })
+      }
 
       document.getElementById('device-info-services').textContent = serviceText
-      */
+
 
 
 
       let details = document.getElementById('device-info-detailscontainer')
 
-      details.textContent = JSON.stringify(device.cleanData,null,2)
+      //details.textContent = JSON.stringify(device.cleanData,null,2)
 
       while (details.firstChild) { details.removeChild(details.firstChild) }
 
       debug('details viewer JSON - ', JSON.stringify(device.cleanData))
 
       let packets = []
+      let seen = 0
       
       for(let adv of devAdv){
-        let gap = adv.parsePacket()
-        packets.push(gap)
+        //adv.parsePacket()
+        console.log(adv.cleanData)
+        seen += adv.data.packet.seen
+        if(adv.data.packet.parsed){
+          packets.push(adv.data.packet.parsed)
+        }
       }
 
 
       const content = {
         packets,
         base64: device.cleanData.packet.base64,
-        seen: device.cleanData.packet.seen
+        seen
       }
 
       this.detailsViewer = new JSONViewer({
@@ -661,9 +708,6 @@ export class RFParty extends EventEmitter {
         theme: 'dark',
         expand: false
       })
-      //
-
-      //! @todo
 
       window.MainWindow.showDiv('device-info')
       
@@ -766,7 +810,7 @@ export class RFParty extends EventEmitter {
       this.deviceLayers[ value ] = layer
       layer.addTo(this.map)
 
-      await this.updateDeviceInfoHud()
+      await this.updateDeviceInfoHud(station)
     }
 
     

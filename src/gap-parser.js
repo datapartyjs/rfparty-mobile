@@ -79,7 +79,7 @@ export class GapField{
 
 
     if(this.raw.field_length > 0){
-      this.raw.type = buffer[this.raw.offset+1]
+      this.raw.type = buffer.readUInt8(this.raw.offset+1)
 
       const Type = GAP_TYPES[this.raw.type] || {}
 
@@ -126,26 +126,60 @@ export class GapParser{
     return fields
   }
 
+  static getUuids(fields){
+    let uuids = []
+    for(let field of fields){
+
+      switch(field.type){
+        case 'ServiceUUIDs':
+        case 'ServiceClassUUIDs':
+          uuids = [... new Set([...uuids, ...field.value])]
+          break
+        case 'ServiceData':
+          uuids = [... new Set([...uuids, ...Object.keys(field.value)])]
+          break
+        default:
+          break
+      }
+    }
+
+    return uuids
+  }
+
   static parseBase64String(data){
     const buffer = Buffer.from( data, 'base64' )
 
     const fields = GapParser.parseBuffer(buffer)
 
+    return fields
+  }
+
+  static toObject(fields){
     const obj = {}
 
     for(let field of fields){
       if(!obj[field.type]){
-        obj[field.type] = field
+        obj[field.type] = [field]
       }
-      else if(Array.isArray(obj[field.type])){
-        obj[field.type].push(field)
-      }
-      else{
-        obj[field.type] = [ obj[field.type] ]
+      else {
         obj[field.type].push(field)
       }
     }
 
     return obj
+  }
+
+  static getServiceData(gapObj){
+    let dataFields = gapObj.ServiceData
+
+    if(!dataFields){ return }
+
+    let data = {}
+
+    for(let datum of dataFields){
+      data = Object.assign({}, data, datum.value)
+    }
+
+    return data
   }
 }

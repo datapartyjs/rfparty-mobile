@@ -20,7 +20,7 @@ exports.LocationIndexed = {
 
 exports.GapField = {
   type: {type: String},
-  value: Object,
+  value: {},
   raw: {
     data: String,
     data_length: Number,
@@ -32,24 +32,32 @@ exports.GapField = {
 }
 
 exports.BleParsedAdv = {
-  mtu: Number,
-  addressType: String,
-  connectable: Boolean,
-  gap: Object,
-  services: [String],
-  unknownServices: [String],
+  //mtu: Number,
+  //addressType: String,
+  //connectable: Boolean,
+  gapTypes: [String],
+  gapFields: [Object],
+  serviceUuids: {
+    results: [{type:String, index:true}],
+    known: [String],
+    unknown: [String]
+  },
+  serviceData: Object,
   hasUnknownService: Boolean,
   product: {type: String, index: true},
   company: {type: String, index: true},
   companyCode: Utils.string(2,2),
 
+  txpower: Number,
+
   localname: {type:String, index: true},
+  broadcastname: {type:String, index: true},
 
   appleContinuity:{
     typeCode: String,
     services: [String],
 
-    lasterror: String,
+    protocolError: Object,
 
     service:{
 
@@ -68,7 +76,7 @@ exports.BleParsedAdv = {
         maintained: Boolean
       },
 
-      nearbyaction: { type: String },
+      nearbyaction: { action: String },
       nearbyinfo: {
         actionCode: Utils.string(2,2),
         action: {type: String, index: true},
@@ -93,7 +101,7 @@ exports.BleParsedAdv = {
 exports.BlePacket = {
   hash: {type: String, index: true},
   base64: String,
-  gapFields: [exports.GapField],
+  //gapFields: [exports.GapField],
   parsed: exports.BleParsedAdv,
   seen: {type: Number, index: true}
   /*seen: [{

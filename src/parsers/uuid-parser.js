@@ -14,24 +14,20 @@ export class UUIDParser {
     return DeviceIdentifiers.APPLE_Continuity[code]
   }
 
-  static lookupUuid16(uuid){
-    const types = Object.keys(UUID16_TABLES)
-
-    for(let type of types){
-      let found = UUID16_TABLES[type][uuid]
-
-      if(found){
-        return '/'+type+'/'+found
-      }
-    }
-  }
 
   static lookupDeviceUuids(uuids){
     let results = []
+    let unknown = []
+    let known = []
     for(let uuid of uuids){
       let value = UUIDParser.lookupDeviceUuid(uuid)
 
-      if(!value){continue}
+      if(!value){
+        unknown.push(uuid)
+        continue
+      }
+
+      known.push(uuid)
 
       if(results.indexOf(value) == -1){
         results.push(value)
@@ -39,10 +35,14 @@ export class UUIDParser {
     }
 
     if(results.length == 0){
-      return null
+      results=undefined
     }
 
-    return results
+    return {
+      results,
+      known,
+      unknown
+    }
   }
 
   static lookupDeviceUuid(uuid){
@@ -60,6 +60,21 @@ export class UUIDParser {
 
     return deviceType
   }
+
+  static lookupUuid16(uuid){
+    const types = Object.keys(UUID16_TABLES)
+
+    for(let type of types){
+      let found = UUID16_TABLES[type][uuid]
+
+      if(found){
+        return '/'+type+'/'+found
+      }
+    }
+
+    return null
+  }
+
 
   static reverseLookupService(term){
 
