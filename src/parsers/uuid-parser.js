@@ -48,7 +48,7 @@ export class UUIDParser {
   static lookupDeviceUuid(uuid){
     let deviceType = null
 
-    console.log('lookup uuid', uuid, 'type', typeof uuid, 'length', uuid.length)
+    //console.log('lookup uuid', uuid, 'type', typeof uuid, 'length', uuid.length)
 
     if(uuid.length == 4){
       //deviceType = DeviceIdentifiers.UUID16[uuid]
