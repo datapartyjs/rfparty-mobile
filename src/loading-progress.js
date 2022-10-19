@@ -79,6 +79,7 @@ export class LoadingProgress extends EventEmitter {
     this.steps[name].completedParts++
     this.emit('progress', this.progress)
   }
+  
 
   completeStep(name, successOrFail=true, message){
     this.steps[name].finished = Date.now()
@@ -113,7 +114,17 @@ export class LoadingProgress extends EventEmitter {
       }
       else{
         let deltaMs = Math.abs( moment(step.started).diff(step.finished) )
-        runningOutput += `\t✓\t ${step.name} (${deltaMs}ms) \t\t\t🤘🏿 \n`
+
+        if(step.successOrFail){
+          runningOutput += `\t✓\t ${step.name} (${deltaMs}ms) \t\t\t🤘🏿 \n`
+        } else {
+          runningOutput += `\t✗\t ${step.name} (${deltaMs}ms) \t\t\t😭 \n`
+        }
+
+        if(step.message){
+          runningOutput += '\t\t\t' + step.message + '\n'
+        }
+
       }
     }
 

@@ -103,8 +103,11 @@ export class RFParty extends EventEmitter {
 
     Leaflet.tileLayer(TILE_SERVER_MAPBOX, TILE_SERVER_MAPBOX_CONFIG).addTo(this.map);
 
+    let startPoint = [0,0]
 
-    this.positionCircle = Leaflet.circle([0,0], { color: 'orange', fill:false, weight:1, opacity: 0.9 }).addTo(this.map)
+    this.map.setView(startPoint, 3)
+
+    this.positionCircle = Leaflet.circle(startPoint, { color: 'orange', fill:false, weight:1, opacity: 0 }).addTo(this.map)
 
     debug('rfparty constructor')
 
@@ -147,7 +150,7 @@ export class RFParty extends EventEmitter {
       this.center = location
       debug('update view center')
 
-      if(this.lastmoveTime == null){
+      if(this.lastmoveTime == null || !this.lastLocation){
         this.map.setView([ location.latitude, location.longitude], 17)  
 
       } else {

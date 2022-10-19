@@ -284,7 +284,10 @@ export class MainWindow {
   static async requestPermissions(perms){
     debug('requesting permissions', perms)
 
-    let result = []
+    let result = {
+      allowed: [],
+      denied: []
+    }
 
     for(let perm of perms){
 
@@ -294,7 +297,13 @@ export class MainWindow {
         cordova.plugins.permissions.requestPermission(perm, resolve, reject))
    
 
-      result.push({ permission:perm , ... req})
+      //result.push({ permission:perm , ... req})
+      debug('\treq', req)
+      if(req.hasPermission){
+        result.allowed.push(perm)
+      } else {
+        result.denied.push(perm)
+      }
     }
 
     return result
@@ -358,6 +367,8 @@ export class MainWindow {
         debug('permissions request result')
         debug( JSON.stringify(request, null, 2))
       //}
+
+      return request
     }
 
 
@@ -588,12 +599,20 @@ export class MainWindow {
   }
 
 
-  static setupGeoLocation(){
+  static setupGeoLocation(permissions){
+
+    let locationProvider = BackgroundGeolocation.ACTIVITY_PROVIDER
+
+    if(permissions.denied.indexOf('android.permission.ACTIVITY_RECOGNITION') != -1){
+      locationProvider = BackgroundGeolocation.RAW_PROVIDER
+      debug('WARNING - Failing back to RAW_PROVIDER. ACTIVITY_RECOGNITION permission denied')
+    }
+
     BackgroundGeolocation.configure({
       startOnBoot: false,
       notificationsEnabled: false,
       //maxLocations: 30,
-      locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
+      locationProvider: locationProvider,
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
       stationaryRadius: 5,
       distanceFilter: 1,
@@ -753,7 +772,9 @@ export class MainWindow {
 
     window.loadingState.startStep('configure permissions')
     await MainWindow.checkPermissions(true)
-    await MainWindow.checkPermissions()
+    let permissions = await MainWindow.checkPermissions()
+
+    
     
     await MainWindow.setupBlePermissions()
     window.loadingState.completeStep('configure permissions')
@@ -776,7 +797,7 @@ export class MainWindow {
 
     MainWindow.setupDisply()
 
-    MainWindow.setupGeoLocation()
+    MainWindow.setupGeoLocation(permissions)
     /*navigator.geolocation.watchPosition(MainWindow.onLocation, console.error, {
       enableHighAccuracy: true,
       maximumAge: 10000
@@ -841,6 +862,11 @@ export class MainWindow {
         exception: {
           message, source, lineNumber, colno, error
         }
+      }
+
+      if(message.indexOf("undefined (reading 'toggle')") > -1){
+        // Ignore
+        return
       }
 
       window.crash_count++
