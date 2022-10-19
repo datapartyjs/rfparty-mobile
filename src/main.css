@@ -98,6 +98,13 @@ body{
 
 }
 
+.large-link {
+  color: white;
+  font-family: Roboto Condensed;
+  font-weight: 200;
+  font-size: 20px;
+}
+
 .jv-dark-rightString {
   color: #66d9ef;
   display: inline-block;
