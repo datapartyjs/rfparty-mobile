@@ -603,9 +603,9 @@ export class MainWindow {
 
     let locationProvider = BackgroundGeolocation.ACTIVITY_PROVIDER
 
-    if(permissions.denied.indexOf('android.permission.ACTIVITY_RECOGNITION') != -1){
+    if(permissions && permissions.denied && permissions.denied.indexOf('android.permission.ACTIVITY_RECOGNITION') != -1){
       locationProvider = BackgroundGeolocation.RAW_PROVIDER
-      debug('WARNING - Failing back to RAW_PROVIDER. ACTIVITY_RECOGNITION permission denied')
+      debug('WARNING - Falling back to RAW_PROVIDER. ACTIVITY_RECOGNITION permission denied')
     }
 
     BackgroundGeolocation.configure({
