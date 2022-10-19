@@ -114,6 +114,7 @@ export class RFParty extends EventEmitter {
     this.searchResults = null
     this.lastRender = null
     this.lastQuery = null
+    this.lastQueryInput = null
 
     this.scanDb = null
     
@@ -123,6 +124,7 @@ export class RFParty extends EventEmitter {
     this.stationCount = 0
     this.locationCount = 0
 
+    this.lastmoveTime = null
     this.sessionStartTime = moment()
 
     this.queryActive = false
@@ -144,15 +146,29 @@ export class RFParty extends EventEmitter {
     if( !this.center || (this.autoCenter && (hasMoved || this.center.accuracy > location.accuracy))){
       this.center = location
       debug('update view center')
-      this.map.setView([ location.latitude, location.longitude], 17)
-      
+
+      if(this.lastmoveTime == null){
+        this.map.setView([ location.latitude, location.longitude], 17)  
+
+      } else {
+
+        let now = moment()
+        let delta = now.diff(this.lastmoveTime, 'seconds')
+
+        if(delta > 30){
+          this.map.setView([ location.latitude, location.longitude], 17)
+        }
+  
+
+      }
+
       this.lastLocation = {
         latitude: location.latitude,
         longitude: location.longitude,
         accuracy: location.accuracy
       }
 
-      Leaflet.circle([ location.latitude, location.longitude], { color: 'white', radius: location.accuracy, fill:false, weight:1, opacity: 0.3 }).addTo(this.map)
+      //Leaflet.circle([ location.latitude, location.longitude], { color: 'white', radius: location.accuracy, fill:false, weight:1, opacity: 0.3 }).addTo(this.map)
 
       this.positionCircle.setStyle({ color: 'green', fill:false, weight:1, opacity: 0.9 })
     } else {
@@ -190,7 +206,11 @@ export class RFParty extends EventEmitter {
 
     this.party = party
 
-    await this.handleSearch('duration')
+    //await this.handleSearch('duration')
+
+    this.map.on('move', ()=>{
+      this.lastmoveTime = new moment()
+    })
 
     this.map.on('moveend', ()=>{
 
@@ -330,7 +350,18 @@ export class RFParty extends EventEmitter {
               //let possibleServices = UUIDParser.reverseLookupService(serviceTerm)
               //debug('possible', possibleServices)
               //console.log('possible', possibleServices)
-              query = query.where('summary.serviceUuids.results').regex(new RegExp(serviceTerm, 'i'))
+
+              if(serviceTerm.indexOf('0x') == 0){
+
+                query = query.or()
+                  .where('summary.serviceUuids.known').regex(new RegExp(serviceTerm.replace('0x',''), 'i'))
+                  .where('summary.serviceUuids.unknown').regex(new RegExp(serviceTerm.replace('0x',''), 'i'))
+
+              } else {
+
+                query = query.where('summary.serviceUuids.results').regex(new RegExp(serviceTerm, 'i'))
+              }
+
             }
             else{
               query = specialQuery
@@ -402,6 +433,7 @@ export class RFParty extends EventEmitter {
     }
 
     try{
+      this.lastQueryInput = input
       await this.doQuery(query, updateStartTime)
     }
     catch(err){
@@ -536,7 +568,7 @@ export class RFParty extends EventEmitter {
         if(firstPt){
           let line = Leaflet.polyline([
             this.trackToLatLonArray([firstPt, lastPt])
-          ], { color: 'blue', opacity: 0.1, weight: '5' })
+          ], { color: 'blue', opacity: 0.6, weight: '5' })
 
           layer.addLayer(line)
           line.on('click', onclick)

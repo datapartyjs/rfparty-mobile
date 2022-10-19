@@ -20,6 +20,10 @@ const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schem
 
 const RFPartyDocuments = require('./documents')
 
+const PermissionsDisclosureMessage = 'This app requires permissions to function.\n\n' +
+  'Location: Allows reading location data even in the background in order to map BLE signal propogation.\n\n' +
+  'See the Privacy Policy for more information.'
+
 //const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 
 /*function debug(...args){
@@ -238,7 +242,7 @@ export class MainWindow {
       altitude: location.altitude,
       bearing: location.bearing,
       latitude: location.latitude,
-      longitude: location.longitude,
+      longitude:  location.longitude,
       speed: location.speed,
     
       isStationary: location.isStationary ? true : false,
@@ -315,7 +319,16 @@ export class MainWindow {
     return true
   }
 
-  static async checkPermissions(){
+  static async displayConfirm(title, content){
+
+    //return window.confirm(content)
+
+    return new Promise((resolve,reject)=>{
+      navigator.notification.confirm(content, resolve, title)
+    })
+  }
+
+  static async checkPermissions(prompt=false){
     debug('checkPermissions - ', MainWindow.Permissions)
     let needs = []
     for(let perm of MainWindow.Permissions){
@@ -327,6 +340,18 @@ export class MainWindow {
     debug('needs permissions', needs)
 
     if(needs.length > 0){
+
+      if(prompt){
+
+        let answer = await MainWindow.displayConfirm('Permissions Required', PermissionsDisclosureMessage)
+  
+        console.log('user answer', answer)
+  
+        if(answer != true){
+          return Promise.reject('user reject')
+        }
+      }
+
       let request = await MainWindow.requestPermissions(needs)
 
       //if(!request.hasPermission){
@@ -463,10 +488,7 @@ export class MainWindow {
     setTimeout(MainWindow.scanLoop, MainWindow.scanWindow)
   }
 
-  static IndexedDb(){
-    return LokiIndexAdapter
-  }
-
+  
   static async setupDb(channel){
     let config = new Dataparty.Config.LocalStorageConfig({basePath:'rfparty-config'})
 
@@ -710,7 +732,7 @@ export class MainWindow {
 
     MainWindow.closeSetupForm()
     MainWindow.openLoading()
-    MainWindow.setupDisply()
+
 
 
     cordova.plugins.backgroundMode.setDefaults({
@@ -728,12 +750,9 @@ export class MainWindow {
 
     cordova.plugins.backgroundMode.enable()
 
-    window.watchdogInterval = setInterval(async ()=>{
-      await MainWindow.scanLoop()
-    }, 5*1000)
 
     window.loadingState.startStep('configure permissions')
-    await MainWindow.checkPermissions()
+    await MainWindow.checkPermissions(true)
     await MainWindow.checkPermissions()
     
     await MainWindow.setupBlePermissions()
@@ -750,6 +769,12 @@ export class MainWindow {
 
     window.loadingState.startStep('configure hardware')
     await MainWindow.scanLoop()
+
+    window.watchdogInterval = setInterval(async ()=>{
+      await MainWindow.scanLoop()
+    }, 5*1000)
+
+    MainWindow.setupDisply()
 
     MainWindow.setupGeoLocation()
     /*navigator.geolocation.watchPosition(MainWindow.onLocation, console.error, {
@@ -779,6 +804,8 @@ export class MainWindow {
     window.rfparty.on('packet_count', ()=>{MainWindow.updateStatus('limegreen')})
 
     window.rfparty.on('location_count', ()=>{MainWindow.updateStatus('blue')})
+
+
 
     window.addEventListener("unhandledrejection", function(promiseRejectionEvent) {
       let reason
@@ -834,6 +861,17 @@ export class MainWindow {
 
     searchElem.disabled = false
 
+    universalLinks.subscribe('sharedQuery', function (eventData) {
+      console.log('Launched from link: ' + eventData.url)
+      console.log(eventData)
+
+      const input = eventData.path.replace('/query/', '')
+        .replace('/', ' ')
+        .trim()
+
+      searchElem.value = input
+      MainWindow.doSearch(searchElem.value, {deeplink: true})
+    })
 
     window.rfparty.on('update-start', ()=>{
       window.MainWindow.hideDiv('search-hint')
