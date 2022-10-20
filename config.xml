@@ -5,7 +5,8 @@
   <author email="code@dataparty.xyz" href="https://dataparty.xyz">dataparty</author>
   <icon src="config/icon-full.png" />
   <platform name="android">
-    <preference name="android-targetSdkVersion" value="31" />
+    <preference name="android-targetSdkVersion" value="32" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
     <preference name="AndroidLaunchMode" value="singleInstance" />
     <exclude-files pattern="nodejs-project/.parcel-cache/" />
     <icon background="config/icon/android/mipmap-mdpi/ic_launcher_adaptive_back.png" density="mdpi" foreground="config/icon/android/mipmap-mdpi/ic_launcher_adaptive_fore.png" />

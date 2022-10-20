@@ -23,10 +23,11 @@
   "author": "Dataparty",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@mauron85/cordova-plugin-background-geolocation": "^3.1.0",
     "buffer": "^6.0.3",
     "cordova": "11.0.0",
     "cordova-android": "^11.0.0",
-    "cordova-background-geolocation-plugin": "^3.1.0",
+    "cordova-background-geolocation-plugin": "^2.0.7",
     "cordova-plugin-android-permissions": "^1.1.3",
     "cordova-plugin-androidx": "^3.0.0",
     "cordova-plugin-androidx-adapter": "^1.1.3",
@@ -106,14 +107,20 @@
       },
       "cordova-plugin-dialogs": {},
       "cordova-plugin-androidx": {},
-      "cordova-background-geolocation-plugin": {},
-      "at.gofg.sportscomputer.powermanagement": {},
+      "cordova-background-geolocation-plugin": {
+        "GOOGLE_PLAY_SERVICES_VERSION": "11+",
+        "ICON": "@mipmap/ic_launcher",
+        "SMALL_ICON": "@mipmap/ic_launcher",
+        "ACCOUNT_NAME": "@string/app_name",
+        "ACCOUNT_LABEL": "@string/app_name",
+        "ACCOUNT_TYPE": "$PACKAGE_NAME.account",
+        "CONTENT_AUTHORITY": "$PACKAGE_NAME"
+      },
       "cordova-plugin-badge": {},
       "cordova.plugins.diagnostic": {
         "ANDROIDX_VERSION": "1.0.0",
         "ANDROIDX_APPCOMPAT_VERSION": "1.3.1"
       },
-      "cordova-plugin-background-mode": {},
       "cordova-plugin-fullscreen": {},
       "cordova-plugin-purchase": {
         "BILLING_KEY": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvyxyAvvP0G+lImRdJDWE3zlEo6CVnYGZaX4ivaQCbuRXF1V8RoOv5+Tl7lndz4SvV8Bi2P4JF2EPOnaGRkGdeD778wMKB+VoSIZ43Rp0+b5df8lQ70NiFpIJmvJ3tW9C2g88Iv636bf/9nvLZtvtIVMnJ3gi/IuOYfX7IbdiOw1ZC9K5oz8ymLtqghQe9AraMBAlm1FAoTOztIq5GZ+M5qXn6kSKG4SNzi2nKWr9yGuLvH53RlxQr6oWToWnH/m+fXINHekhgJW78CZREzW0BbgencXEcuu7CP+16U00evzCPKKo/Km8hnoBq08mOl33m1IzCAvw7J8ggr6Vav9YsQIDAQAB"
@@ -123,8 +130,12 @@
       },
       "cordova-plugin-inappbrowser": {},
       "cordova-plugin-vibration": {},
-      "cordova-plugin-deeplinks": {}
+      "cordova-plugin-deeplinks": {},
+      "cordova-plugin-powermanagement-orig": {},
+      "cordova-plugin-background-mode": {}
     },
-    "platforms": []
+    "platforms": [
+      "android"
+    ]
   }
 }
