@@ -11,7 +11,7 @@ npm i
 #npm run prepare-nodejs
 cordova platform add android@latest
 #cordova plugin add cordova-plugin-androidx
-cordova plugin add nodejs-mobile-cordova
+#cordova plugin add nodejs-mobile-cordova
 #cordova plugin add cordova-plugin-exclude-files
 #cordova plugin add @mauron85/cordova-plugin-background-geolocation
 cordova plugin add cordova-plugin-inappbrowser

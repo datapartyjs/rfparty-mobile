@@ -1,10 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="xyz.dataparty.rfparty" version="1.1.9" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="xyz.dataparty.rfparty" version="1.1.10" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
   <name>rfparty</name>
   <description>A bluetooth tricorder</description>
   <author email="code@dataparty.xyz" href="https://dataparty.xyz">dataparty</author>
   <icon src="config/icon-full.png" />
   <platform name="android">
+    <preference name="android-minSdkVersion" value="30" />
     <preference name="android-targetSdkVersion" value="32" />
     <preference name="AndroidPersistentFileLocation" value="Internal" />
     <preference name="AndroidLaunchMode" value="singleInstance" />

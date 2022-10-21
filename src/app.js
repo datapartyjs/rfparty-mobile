@@ -45,7 +45,13 @@ async function main(channel){
 
 async function ready() {
     
- let channel = (nodejs && nodejs.channel) ? nodejs.channel : undefined
+ let channel = undefined
+
+ try{
+  channel = nodejs.channel
+ } catch (err){
+  console.log('app running without nodejs')
+ }
  
  if(channel){
     nodejs.channel.setListener(channelListener)
