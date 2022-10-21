@@ -266,6 +266,20 @@ body{
   align-items: center;
 }
 
+.loading-start-button {
+  width: 100%;
+
+  margin: 10px;
+
+  background-color: rgba(0, 0, 0, 0.349);
+  color: white;
+  border-radius: 0px;
+  
+  font-family: 'Roboto Condensed';
+  font-weight: 200;
+  font-size: 24px;
+}
+
 
 progress::-moz-progress-bar { background: white; }
 progress::-webkit-progress-value { background: white; }

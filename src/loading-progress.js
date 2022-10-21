@@ -49,6 +49,19 @@ export class LoadingProgress extends EventEmitter {
 
   hasStep(name){ return this.steps[name]!==undefined }
 
+  async run(name, fn){
+      this.startStep(name)
+      
+      try{
+          await fn()
+          this.completeStep(name, true)
+      } catch (err){
+          this.completeStep(name, false, err)
+          this.emit('error', {step:name})
+          throw err
+      }
+  }
+  
   startStep(name, parts=1){
 
     if(this.hasStep(name)){
