@@ -807,7 +807,6 @@ export class MainWindow {
         while(!permissionsOk || !bleEA){
             if(!permissionsOk){
                 permissions = await MainWindow.checkPermissions(true)
-                 //= await MainWindow.checkPermissions()
                 debug('got permissions result', permissions)
                 if(permissions && permissions.denied &&
                    permissions.denied.length > 0){
