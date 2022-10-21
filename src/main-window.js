@@ -420,7 +420,8 @@ export class MainWindow {
 
   static async setupBluetoothPermissions(){
     return new Promise((resolve, reject)=>{
-      cordova.plugins.diagnostic.requestBluetoothAuthorization(resolve, reject);
+       const permissions = ["BLUETOOTH_SCAN", "BLUETOOTH_CONNECT", "BLUETOOTH_ADVERTISE"]
+      cordova.plugins.diagnostic.requestBluetoothAuthorization(resolve, reject, permissions);
     })
   }
 
@@ -601,7 +602,8 @@ export class MainWindow {
 
   static setupGeoLocation(permissions){
 
-    let locationProvider = BackgroundGeolocation.ACTIVITY_PROVIDER
+    //let locationProvider = BackgroundGeolocation.ACTIVITY_PROVIDER
+    let locationProvider = BackgroundGeolocation.RAW_PROVIDER
 
     if(permissions && permissions.denied && permissions.denied.indexOf('android.permission.ACTIVITY_RECOGNITION') != -1){
       locationProvider = BackgroundGeolocation.RAW_PROVIDER
