@@ -29,10 +29,6 @@ function onerror(msg){
   console.error(msg)
 }
 
-nodejs.channel.setListener(channelListener)
-nodejs.channel.on('debug', ondebug)
-nodejs.channel.on('error', onerror)
-
 
 async function main(channel){
   console.log('app.js - main()')
@@ -48,9 +44,23 @@ async function main(channel){
 
 
 async function ready() {
+    
+ let channel = undefined
+
+ try{
+  channel = nodejs.channel
+ } catch (err){
+  console.log('app running without nodejs')
+ }
+ 
+ if(channel){
+    nodejs.channel.setListener(channelListener)
+    nodejs.channel.on('debug', ondebug)
+    nodejs.channel.on('error', onerror)
+ }
 
   try{
-    await main(nodejs.channel).catch(err=>{
+    await main(channel).catch(err=>{
       console.log('ERROR - app.js main catch' + JSON.stringify(err,null,2), err)
     }).then(()=>{
       console.log('finished app.js')

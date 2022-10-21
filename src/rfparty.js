@@ -143,23 +143,27 @@ export class RFParty extends EventEmitter {
       toLoc(location)
     )
 
-    let hasMoved = ((movedDistance*1000) > 5) && location.accuracy < 30
+    const latLon = Leaflet.latLng([ location.latitude, location.longitude])
+    let hasMoved = ((movedDistance*1000) > 100) && location.accuracy < 30
+    let isInView = this.map.getBounds().pad(-0.3).contains(latLon) && location.accuracy < 30
 
     //Update if we don't have a center or accuracy improves and autocenter is turned-on
-    if( !this.center || (this.autoCenter && (hasMoved || this.center.accuracy > location.accuracy))){
+    if( !this.center || (this.autoCenter && (this.center.accuracy > location.accuracy || !isInView))){
       this.center = location
       debug('update view center')
 
       if(this.lastmoveTime == null || !this.lastLocation){
-        this.map.setView([ location.latitude, location.longitude], 17)  
+        this.map.flyTo(latLon, 17)  
 
       } else {
 
-        let now = moment()
+        let now = new moment()
         let delta = now.diff(this.lastmoveTime, 'seconds')
+        
+        debug('\t delta check',delta)
 
         if(delta > 30){
-          this.map.setView([ location.latitude, location.longitude], 17)
+          this.map.setView(latLon, 17)
         }
   
 
@@ -171,7 +175,7 @@ export class RFParty extends EventEmitter {
         accuracy: location.accuracy
       }
 
-      //Leaflet.circle([ location.latitude, location.longitude], { color: 'white', radius: location.accuracy, fill:false, weight:1, opacity: 0.3 }).addTo(this.map)
+      //Leaflet.circle(latLon, { color: 'white', radius: location.accuracy, fill:false, weight:1, opacity: 0.3 }).addTo(this.map)
 
       this.positionCircle.setStyle({ color: 'green', fill:false, weight:1, opacity: 0.9 })
     } else {
@@ -179,7 +183,7 @@ export class RFParty extends EventEmitter {
     }
 
     this.positionCircle.setRadius(location.accuracy)
-    this.positionCircle.setLatLng([ location.latitude, location.longitude])
+    this.positionCircle.setLatLng(latLon)
 
     let track = await RFPartyDocuments.geo_track.indexGeoPoint(this.party, location)
     this.locationCount++
@@ -211,7 +215,7 @@ export class RFParty extends EventEmitter {
 
     //await this.handleSearch('duration')
 
-    this.map.on('move', ()=>{
+    this.map.on('mouseup', ()=>{
       this.lastmoveTime = new moment()
     })
 

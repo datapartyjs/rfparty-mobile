@@ -23,6 +23,10 @@ const RFPartyDocuments = require('./documents')
 const PermissionsDisclosureMessage = 'This app requires permissions to function.\n\n' +
   'Location: Allows reading location data even in the background in order to map BLE signal propogation.\n\n' +
   'See the Privacy Policy for more information.'
+  
+const BLEPermissionsDisclosureMessage = 'This app requires permissions to function.\n\n' +
+  'Bluetooth: Allows reading bluetooth data even in the background in order to map BLE signal propogation.\n\n' +
+  'See the Privacy Policy for more information.'
 
 //const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 
@@ -78,24 +82,7 @@ window.seen_macs = {}
 
 window.status_text = ''
 
-window.printBle = function (){
-
-
-  for(let mac in window.advertisements){
-    const station = window.advertisements[mac]
-
-    //const buffer = Buffer.from( station.advertising.data, 'base64' )
-    
-    debug(station)
-
-    const fields = GapParser.parseBase64String( station.advertising.data ) 
-
-    debug( fields )
-
-    //debug('\t', buffer.toString('hex'))
-  }
-}
-
+window.channel = null
 
 export class MainWindow {
 
@@ -115,7 +102,8 @@ export class MainWindow {
       versionText.innerText = 'v' + RFParty.Version
     }
 
-    await MainWindow.setupSession(channel)
+    window.channel = channel
+    await MainWindow.setupSession(window.channel)
   }
 
   static hideDiv(divId){ return MainWindow.addRemoveClass(divId, 'add', 'hidden') }
@@ -166,6 +154,13 @@ export class MainWindow {
     MainWindow.hideDiv('setup-modal')
     
   }
+  
+  static async reload(){
+    MainWindow.showDiv('loading-text')
+    MainWindow.showDiv('loading-progress-bar')
+    MainWindow.hideDiv('loading-start-button')
+    await MainWindow.setupSession(window.channel)
+  }
 
   static openLoading(){
     MainWindow.showDiv('modal-shadow')
@@ -194,6 +189,12 @@ export class MainWindow {
     window.loadingState.on('progress', (progress)=>{
       document.getElementById('loading-value').innerText=''+ Math.round(progress*100)
       document.getElementById('loading-progress-bar').value= progress*100
+    })
+    
+    window.loadingState.on('error', ({step})=>{
+      MainWindow.hideDiv('loading-text')
+      MainWindow.hideDiv('loading-progress-bar')
+      MainWindow.showDiv('loading-start-button')
     })
   }
 
@@ -270,7 +271,7 @@ export class MainWindow {
     return [
       cordova.plugins.permissions.ACCESS_FINE_LOCATION,
       cordova.plugins.permissions.ACCESS_COARSE_LOCATION,
-      cordova.plugins.permissions.ACTIVITY_RECOGNITION,
+      //cordova.plugins.permissions.ACTIVITY_RECOGNITION,
       cordova.plugins.permissions.ACCESS_BACKGROUND_LOCATION,
       cordova.plugins.permissions.WAKE_LOCK,
       //cordova.plugins.permissions.BLUETOOTH_SCAN
@@ -357,7 +358,7 @@ export class MainWindow {
         console.log('user answer', answer)
   
         if(answer != true){
-          return Promise.reject('user reject')
+          return Promise.reject('User rejected required permissions. The app cannot function without the requested permissions.')
         }
       }
 
@@ -379,7 +380,11 @@ export class MainWindow {
     const bluetoothSetup = await MainWindow.isBluetoothSetup()
     if( !bluetoothSetup ){
       debug('setupBlePermissions - setting permissions')
-      await MainWindow.setupBluetoothPermissions()
+      try{  
+        await MainWindow.setupBluetoothPermissions()
+      } catch (err){
+        return false
+      }
     }
 
     if(! (await MainWindow.isBleEnabled()) ){
@@ -395,8 +400,24 @@ export class MainWindow {
       debug('prompting user to enable ble')
       await ble.withPromises.showBluetoothSettings()
     }*/
+    
+    return true
   }
 
+  
+  static async hasBluetoothSupport(){
+    return new Promise((resolve,reject)=>{
+
+      debug('isBluetoothSetup - checking')
+
+      //cordova.plugins.diagnostic.hasBluetoothSupport((supported)=>{
+      cordova.plugins.diagnostic.hasBluetoothLESupport((supported)=>{
+          resolve(supported)
+      }, reject)
+    })
+  }
+  
+  
   static async isBluetoothSetup(){
     return new Promise((resolve,reject)=>{
 
@@ -420,7 +441,8 @@ export class MainWindow {
 
   static async setupBluetoothPermissions(){
     return new Promise((resolve, reject)=>{
-      cordova.plugins.diagnostic.requestBluetoothAuthorization(resolve, reject);
+       const permissions = ["BLUETOOTH_SCAN", "BLUETOOTH_CONNECT", "BLUETOOTH_ADVERTISE"]
+      cordova.plugins.diagnostic.requestBluetoothAuthorization(resolve, reject, permissions);
     })
   }
 
@@ -601,12 +623,13 @@ export class MainWindow {
 
   static setupGeoLocation(permissions){
 
-    let locationProvider = BackgroundGeolocation.ACTIVITY_PROVIDER
+    //let locationProvider = BackgroundGeolocation.ACTIVITY_PROVIDER
+    let locationProvider = BackgroundGeolocation.RAW_PROVIDER
 
-    if(permissions && permissions.denied && permissions.denied.indexOf('android.permission.ACTIVITY_RECOGNITION') != -1){
+    /*if(permissions && permissions.denied && permissions.denied.indexOf('android.permission.ACTIVITY_RECOGNITION') != -1){
       locationProvider = BackgroundGeolocation.RAW_PROVIDER
       debug('WARNING - Falling back to RAW_PROVIDER. ACTIVITY_RECOGNITION permission denied')
-    }
+    }*/
 
     BackgroundGeolocation.configure({
       startOnBoot: false,
@@ -619,9 +642,9 @@ export class MainWindow {
       notificationTitle: 'rfparty',
       notificationText: 'partying in background',
       debug: false,
-      interval: 10000,
+      interval: 5000,
       fastestInterval: 1000,
-      activitiesInterval: 10000,
+      activitiesInterval: 5000,
     })
 
     BackgroundGeolocation.on('location', MainWindow.onLocation)
@@ -643,10 +666,10 @@ export class MainWindow {
       MainWindow.onLocation({isStationary: true, ...stationaryLocation})
     })
   
-    BackgroundGeolocation.on('activity', function(activity) {
+    /*BackgroundGeolocation.on('activity', function(activity) {
       // handle stationary locations here
       onLocationDebug('geolocation - activity', activity)
-    })
+    })*/
 
     BackgroundGeolocation.on('error', function(error) {
       onLocationDebug('[ERROR] BackgroundGeolocation error:', error.code, error.message);
@@ -665,10 +688,7 @@ export class MainWindow {
       onLocationDebug('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled)
       onLocationDebug('[INFO] BackgroundGeolocation auth status: ' + status.authorization)
   
-      // you don't need to check status before start (this is just the example)
-      if (!status.isRunning) {
-        BackgroundGeolocation.start(); //triggers start on start event
-      }
+      if (!status.isRunning) { BackgroundGeolocation.start() }
     });
 
     //BackgroundGeolocation.start()
@@ -754,70 +774,107 @@ export class MainWindow {
 
 
 
-    cordova.plugins.backgroundMode.setDefaults({
-      title: 'rfparty',
-      text: 'partying in the background',
-      icon: 'ic_launcher', // this will look for icon.png in platforms/android/res/drawable|mipmap
-      color: '000000', // hex format like 'F14F4D'
-      //resume: Boolean,
-      //hidden: true,
-      silent: true
-      //bigText: Boolean
+
+
+    
+    let permissions = null
+
+    await window.loadingState.run('configure permissions', async ()=>{
+        
+        cordova.plugins.backgroundMode.setDefaults({
+            title: 'rfparty',
+            text: 'partying in the background',
+            icon: 'ic_launcher', // this will look for icon.png in platforms/android/res/drawable|mipmap
+            color: '000000', // hex format like 'F14F4D'
+            //resume: Boolean,
+            //hidden: true,
+            silent: true
+            //bigText: Boolean
+        })
+
+        cordova.plugins.backgroundMode.overrideBackButton()
+
+        cordova.plugins.backgroundMode.enable()
+        
+        let hasBLE = await MainWindow.hasBluetoothSupport()
+        
+        if(!hasBLE){ throw new Error('This device does not have BLE support!') }
+        
+        let tried = false
+        let permissionsOk = false
+        let bleEA = false
+        
+        while(!permissionsOk || !bleEA){
+            if(!permissionsOk){
+                permissions = await MainWindow.checkPermissions(true)
+                debug('got permissions result', permissions)
+                if(permissions && permissions.denied &&
+                   permissions.denied.length > 0){
+                    if(permissions.denied.length > 1){
+                        permissionsOk = false
+                    }
+                    else if(permissions.denied.indexOf('android.permission.ACTIVITY_RECOGNITION') != -1){
+                        permissionsOk = true
+                    }
+                    else{
+                        permissionsOk = true
+                    }
+                } else {
+                    
+                    permissionsOk = true
+                }
+            }
+        
+            if(!bleEA){
+                bleEA = await MainWindow.setupBlePermissions()
+            }
+            
+            if(!bleEA || !permissionsOk){   
+                await new Promise((resolve,reject)=>{
+                    cordova.plugins.diagnostic.switchToSettings(resolve, reject)
+                })
+            }
+            
+            
+            tried = true
+        }
+    })
+    
+
+    await window.loadingState.run('please enable location', async ()=>{
+        await MainWindow.waitForHardware()
+    })
+    
+    await window.loadingState.run('configure db', async ()=>{
+        await MainWindow.setupDb(channel)
     })
 
-    cordova.plugins.backgroundMode.overrideBackButton()
+    await window.loadingState.run('configure hardware', async ()=>{
+        await MainWindow.scanLoop()
 
-    cordova.plugins.backgroundMode.enable()
+        window.watchdogInterval = setInterval(async ()=>{
+        await MainWindow.scanLoop()
+        }, 5*1000)
 
+        MainWindow.setupDisply()
 
-    window.loadingState.startStep('configure permissions')
-    await MainWindow.checkPermissions(true)
-    let permissions = await MainWindow.checkPermissions()
+        MainWindow.setupGeoLocation(permissions)
 
-    
-    
-    await MainWindow.setupBlePermissions()
-    window.loadingState.completeStep('configure permissions')
+        window.powerManagement.setReleaseOnPause(false, function() {
+        debug('wakelock - Set successfully');
 
+        window.powerManagement.cpu(function() {
+            debug('Wakelock - cpu lock acquired');
+        }, function() {
+            debug('wakelock - Failed to acquire wakelock');
+        }, false);
 
-    window.loadingState.startStep('please enable location')
-    await MainWindow.waitForHardware()
-    window.loadingState.completeStep('please enable location')
-
-    window.loadingState.startStep('configure db')
-    await MainWindow.setupDb(channel)
-    window.loadingState.completeStep('configure db')
-
-    window.loadingState.startStep('configure hardware')
-    await MainWindow.scanLoop()
-
-    window.watchdogInterval = setInterval(async ()=>{
-      await MainWindow.scanLoop()
-    }, 5*1000)
-
-    MainWindow.setupDisply()
-
-    MainWindow.setupGeoLocation(permissions)
-    /*navigator.geolocation.watchPosition(MainWindow.onLocation, console.error, {
-      enableHighAccuracy: true,
-      maximumAge: 10000
-    })*/
-
-    window.powerManagement.setReleaseOnPause(false, function() {
-      debug('wakelock - Set successfully');
-
-      window.powerManagement.cpu(function() {
-        debug('Wakelock - cpu lock acquired');
-      }, function() {
-        debug('wakelock - Failed to acquire wakelock');
-      }, false);
-
-      
-    }, function() {
-      debug('wakelock - Failed to set');
+        
+        }, function() {
+        debug('wakelock - Failed to set');
+        })
     })
     
-    window.loadingState.completeStep('configure hardware')
 
 
     window.rfparty.on('station_count', ()=>{MainWindow.updateStatus('green')})
@@ -864,7 +921,9 @@ export class MainWindow {
         }
       }
 
-      if(message.indexOf("undefined (reading 'toggle')") > -1){
+      if(message.indexOf("undefined (reading 'toggle')") > -1 ||
+         message.indexOf("Cannot read property 'toggle' of undefined")
+      ){
         // Ignore
         return
       }

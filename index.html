@@ -34,10 +34,13 @@
 
       <div id='center-modal' class="center-modal">
         <div class="rainbows hidden" id='logo' >rfparty</div>
+        
+     
       
         <div id='loading-bar' class='loading-bar hidden'>
-          <center><span>Loading <span id='loading-value'>0</span>%</span></center>
+          <center><span id='loading-text'>Loading <span id='loading-value'>0</span>%</span></center>
           <progress id="loading-progress-bar" class='loading-progress-bar' max="100" value="0"></progress>
+          <button id='loading-start-button' class='loading-start-button hidden' onclick='MainWindow.reload()'>Start</button>
           <textarea id='loading-details' class='loading-details' readonly disabled>
           </textarea>
           <br/>

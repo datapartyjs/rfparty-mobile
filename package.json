@@ -1,7 +1,7 @@
 {
   "name": "xyz.dataparty.rfparty",
   "displayName": "rfparty",
-  "version": "1.1.6",
+  "version": "1.1.10",
   "description": "A bluetooth tricorder",
   "source": "./index.html",
   "scripts": {
@@ -12,7 +12,7 @@
     "lint": "eslint --fix src/ || exit 0",
     "package": "cordova run android --debug",
     "repackage": "cordova clean android; cordova run android --debug",
-    "deploy": "killall java; cordova run android --debug",
+    "deploy": "cordova run android --debug",
     "clean-dataparty": "rm -rf node_modules/@dataparty/api; rm package-lock.json",
     "clean-nodejs": "cd www/nodejs-project && npm run clean",
     "build-nodejs": "cd www/nodejs-project && npm run build",
@@ -23,6 +23,7 @@
   "author": "Dataparty",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@mauron85/cordova-plugin-background-geolocation": "^3.1.0",
     "buffer": "^6.0.3",
     "cordova": "11.0.0",
     "cordova-android": "^11.0.0",
@@ -48,7 +49,6 @@
     "cordova.plugins.diagnostic": "^7.1.0",
     "eslint": "8.19.0",
     "events": "^3.3.0",
-    "nodejs-mobile-cordova": "file:../nodejs-mobile-cordova",
     "parcel": "2.6.2",
     "parcel-plugin-clean-dist": "0.0.6",
     "parcel-plugin-static-files-copy": "2.6.0",
@@ -95,7 +95,6 @@
       "cordova-plugin-console": {},
       "cordova-plugin-android-permissions": {},
       "cordova-plugin-play-default-sounds": {},
-      "nodejs-mobile-cordova": {},
       "cordova-plugin-device": {},
       "cordova-plugin-androidx-adapter": {},
       "cordova-plugin-local-notification": {
@@ -106,14 +105,20 @@
       },
       "cordova-plugin-dialogs": {},
       "cordova-plugin-androidx": {},
-      "cordova-background-geolocation-plugin": {},
-      "at.gofg.sportscomputer.powermanagement": {},
+      "cordova-background-geolocation-plugin": {
+        "GOOGLE_PLAY_SERVICES_VERSION": "11+",
+        "ICON": "@mipmap/ic_launcher",
+        "SMALL_ICON": "@mipmap/ic_launcher",
+        "ACCOUNT_NAME": "@string/app_name",
+        "ACCOUNT_LABEL": "@string/app_name",
+        "ACCOUNT_TYPE": "$PACKAGE_NAME.account",
+        "CONTENT_AUTHORITY": "$PACKAGE_NAME"
+      },
       "cordova-plugin-badge": {},
       "cordova.plugins.diagnostic": {
         "ANDROIDX_VERSION": "1.0.0",
         "ANDROIDX_APPCOMPAT_VERSION": "1.3.1"
       },
-      "cordova-plugin-background-mode": {},
       "cordova-plugin-fullscreen": {},
       "cordova-plugin-purchase": {
         "BILLING_KEY": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvyxyAvvP0G+lImRdJDWE3zlEo6CVnYGZaX4ivaQCbuRXF1V8RoOv5+Tl7lndz4SvV8Bi2P4JF2EPOnaGRkGdeD778wMKB+VoSIZ43Rp0+b5df8lQ70NiFpIJmvJ3tW9C2g88Iv636bf/9nvLZtvtIVMnJ3gi/IuOYfX7IbdiOw1ZC9K5oz8ymLtqghQe9AraMBAlm1FAoTOztIq5GZ+M5qXn6kSKG4SNzi2nKWr9yGuLvH53RlxQr6oWToWnH/m+fXINHekhgJW78CZREzW0BbgencXEcuu7CP+16U00evzCPKKo/Km8hnoBq08mOl33m1IzCAvw7J8ggr6Vav9YsQIDAQAB"
@@ -123,8 +128,12 @@
       },
       "cordova-plugin-inappbrowser": {},
       "cordova-plugin-vibration": {},
-      "cordova-plugin-deeplinks": {}
+      "cordova-plugin-deeplinks": {},
+      "cordova-plugin-powermanagement-orig": {},
+      "cordova-plugin-background-mode": {}
     },
-    "platforms": []
+    "platforms": [
+      "android"
+    ]
   }
 }
