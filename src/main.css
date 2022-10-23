@@ -43,6 +43,37 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url(./fonts/MaterialIcons.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 400;
+  src: url(./fonts/Montserrat.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
 html {
   overflow: hidden;
   min-height: 100%;
@@ -108,6 +139,123 @@ button {
 
 .menu__text {
   font-size: 24px;
+}
+
+.menu_button {
+  z-index: 1;
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+
+  width: 20px;
+  height: 20px;
+
+  left: 10px;
+  top:40px;
+}
+
+.record-button {
+  z-index: 1;
+  position: absolute;
+
+  width: 20px;
+  height: 20px;
+
+  right: 30px;
+  top:40px;
+}
+
+.recording {
+	background: black;
+	border-radius: 50%;
+	margin: 10px;
+	height: 20px;
+	width: 20px;
+
+	box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
+	transform: scale(1);
+	animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+	0% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+	}
+
+	70% {
+		transform: scale(1);
+		box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+	}
+
+	100% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+	}
+}
+
+.recording.red {
+  background: rgba(255, 82, 82, 1);
+  box-shadow: 0 0 0 0 rgba(255, 82, 82, 1);
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(255, 82, 82, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 82, 82, 0);
+  }
+}
+
+.fullscreen-button {
+  z-index: 1;
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+
+  width: 0px;
+  height: 50px;
+
+  left: 20px;
+  bottom:20px;
+}
+
+
+
+.location-button {
+  z-index: 1;
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+
+  width: 50px;
+  height: 60px;
+
+  right: 10px;
+  bottom:20px;
+}
+
+.layers-button {
+  z-index: 1;
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+
+  width: 50px;
+  height: 60px;
+
+  right: 10px;
+  bottom: 80px;
 }
 
 .content {
@@ -218,18 +366,7 @@ button {
   top:40px;
 }
 
-.menu_button {
-  z-index: 1;
-  position: absolute;
-  display: flex;
-  align-items: stretch;
 
-  width: 20px;
-  height: 20px;
-
-  left: 10px;
-  top:40px;
-}
 
 .search-input {
   font-size: 24px;

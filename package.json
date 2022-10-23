@@ -1,7 +1,7 @@
 {
   "name": "xyz.dataparty.rfparty",
   "displayName": "rfparty",
-  "version": "1.1.10",
+  "version": "1.1.11",
   "description": "A bluetooth tricorder",
   "source": "./index.html",
   "scripts": {
@@ -46,6 +46,7 @@
     "cordova-plugin-play-default-sounds": "^1.0.1",
     "cordova-plugin-powermanagement-orig": "github:sevenbitbyte/cordova-plugin-powermanagement",
     "cordova-plugin-purchase": "^11.0.0",
+    "cordova-plugin-softinputmode": "^1.0.3",
     "cordova-plugin-vibration": "^3.1.1",
     "cordova.plugins.diagnostic": "^7.1.0",
     "eslint": "8.19.0",
@@ -149,7 +150,8 @@
       "cordova-plugin-vibration": {},
       "cordova-plugin-deeplinks": {},
       "cordova-plugin-powermanagement-orig": {},
-      "cordova-plugin-background-mode": {}
+      "cordova-plugin-background-mode": {},
+      "cordova-plugin-softinputmode": {}
     },
     "platforms": [
       "android"

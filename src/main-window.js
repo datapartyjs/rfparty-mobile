@@ -57,6 +57,14 @@ function hexString(arrayBuffer){
   return hexOctets.join('')
 }
 
+function p (fn){
+  return ()=>{
+    return new Promise((resolve,reject)=>{
+      fn(resolve,reject)
+    })
+  }
+}
+
 const SearchSuggestions = {
   //help: false,
   here: false,
@@ -756,15 +764,26 @@ export class MainWindow {
     MainWindow.setConnectionStatus(window.status_text, color || 'green')
   }
 
-  static async setupDisply(){
+  
 
-    const p = (fn)=>{
-      return ()=>{
-        return new Promise((resolve,reject)=>{
-          fn(resolve,reject)
-        })
-      }
+  static async toggleFullScreen(){
+    debug('toggle fullscreen')
+    if(window.fullscreen){
+      await (p(AndroidFullScreen.showSystemUI)())
+
+      MainWindow.hideDiv('minimize-menu-item')
+      MainWindow.showDiv('maximize-menu-item')
+    } else {
+      await (p(AndroidFullScreen.immersiveMode)())
+
+      MainWindow.showDiv('minimize-menu-item')
+      MainWindow.hideDiv('maximize-menu-item')
     }
+
+    window.fullscreen = !window.fullscreen
+  }
+
+  static async setupDisply(){
 
     let supported = await (p(AndroidFullScreen.isSupported)())
     supported == supported && await (p(AndroidFullScreen.isImmersiveModeSupported)())
@@ -777,6 +796,7 @@ export class MainWindow {
     //await (p(AndroidFullScreen.showUnderSystemUI)())
 
     await (p(AndroidFullScreen.immersiveMode)())
+    window.fullscreen = true
 
 
     let dimensionsImmersiveFinal = {
@@ -793,7 +813,7 @@ export class MainWindow {
 
     console.log('immersive dimensions final', dimensionsImmersiveFinal)
 
-
+    
   }
 
   static async setupSession(channel){
@@ -902,6 +922,9 @@ export class MainWindow {
         }, function() {
         debug('wakelock - Failed to set');
         })
+
+        //debug('allow shrink view')
+        //window.Keyboard.shrinkView(true)
     })
     
 

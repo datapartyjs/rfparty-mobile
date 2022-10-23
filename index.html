@@ -62,14 +62,47 @@
 
       <div class="drawer-main drawer-content">
 
-        <ul class="menu_button menu_invert">
+        <ul id='app-menu-button' class="menu menu_button menu_invert">
           <li class="menu_item">
             <button class="menu__action menu__action_icon" data-drawer-toggle="drawer">
               <i data-feather="menu"></i>
             </button>
           </li>
         </ul>
+
+        <div id='record-button' class="record-button">
+          <div class="recording red"></div>
+        </div>
   
+        <ul id="fullscreen-button" class="menu fullscreen-button menu_invert">
+          <li id="maximize-menu-item" class="menu_item hidden">
+            <button class="menu__action menu__action_icon" onClick="MainWindow.toggleFullScreen()">
+              <i data-feather="maximize"></i>
+            </button>
+          </li>
+          <li id="minimize-menu-item" class="menu_item">
+            <button class="menu__action menu__action_icon" onClick="MainWindow.toggleFullScreen()">
+              <i data-feather="minimize"></i>
+            </button>
+          </li>
+        </ul>
+
+        <ul id="location-button" class="menu location-button menu_invert">
+          <li class="menu_item">
+            <button class="menu__action menu__action_icon">
+              <i data-feather="map-pin"></i>
+            </button>
+          </li>
+        </ul>
+
+        <ul id="layers-button" class="menu layers-button menu_invert">
+          <li class="menu_item">
+            <button class="menu__action menu__action_icon">
+              <i data-feather="layers"></i>
+            </button>
+          </li>
+        </ul>
+
         <div class='search-bar'>
           <input id='search-input' class='search-input' type="search" placeholder="search" disabled>
             <div class="search-clear" id="search-clear" onclick="document.getElementById('search-input').value=null">X</div>
@@ -148,10 +181,9 @@
   
         
   
-        <footer class='footer-left'>
+        <!--<footer class='footer-left'>
           <span><span class='footer-logo'>rfparty</span> - <span id='version-text'></span> </span>
-  
-        </footer> 
+        </footer> -->
   
       </div>
     </div>

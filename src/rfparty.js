@@ -1049,56 +1049,57 @@ export class RFParty extends EventEmitter {
 
     if(this.mode == 'map'){
       MainWindow.hideDiv('full-content')
+      window.SoftInputMode.set('adjustNothing')
     }
     else if(this.mode == 'settings'){
       let fullContent = document.getElementById('full-content')
       let fullContentTitle = document.getElementById('full-content-title')
+      window.SoftInputMode.set('adjustUnspecified')
 
       MainWindow.showDiv('full-content')
 
       fullContentTitle.textContent = this.mode.charAt(0).toUpperCase() + this.mode.slice(1)
 
+      const settings_config = {
+        container: fullContent,
+        theme: SettingsTheme,
+        orientation: 'left',
+        collapsible: true,
+        collapsed: true,
+        fontFamily: 'Roboto Condensed',
+        labelWidth: '30%',
+        fontSize: '16px',
+        style:{
+          width: '100vw'
+        },
+        className: 'settings-panel--collapsed'
+      }
 
-      let general_settings = SettingsPanel([
+      let general_settings = new SettingsPanel([
+        {type: 'checkbox', label: 'Start on boot', value: false},
+        {type: 'checkbox', label: 'Start fullscreen', value: true},
+        {type: 'checkbox', label: 'Keep screen on', value: true},
         {type: 'checkbox', label: 'Persistant Storage', value: true},
         {type: 'checkbox', label: 'Delete Old Data', value: false},
         {type: 'range', label: 'Max age (days)', min: 0, max: 365, default: 31},
       ],
         {
           title: 'General',
-          container: fullContent,
-          theme: SettingsTheme,
-          orientation: 'left',
-          collapsible: true,
-          fontFamily: 'Roboto Condensed',
-          labelWidth: '30%',
-          fontSize: '16px',
-          style:{
-            width: '100vw'
-          }
+          ...settings_config
         }
       )
 
-      let bluetooth_settings = SettingsPanel([
+      let bluetooth_settings = new SettingsPanel([
         {type: 'checkbox', label: 'Active Scanning', value: true},
         {type: 'range', label: 'Scan Interval (s)', min: 0, max: 600, default: 60},
       ],
         {
           title: 'Bluetooth',
-          container: fullContent,
-          theme: SettingsTheme,
-          orientation: 'left',
-          collapsible: true,
-          fontFamily: 'Roboto Condensed',
-          labelWidth: '30%',
-          fontSize: '16px',
-          style:{
-            width: '100vw'
-          }
+          ...settings_config
         }
       )
 
-      let geo_settings = SettingsPanel([
+      let location_settings = new SettingsPanel([
         {type: 'select', label: 'Location Provider', options: ['distance', 'activity', 'raw'], value: 'raw'},
         {type: 'range', label: 'Interval (s)', min: 0, max: 300, default: 5},
         {type: 'range', label: 'Fastest Interval (s)', min: 0, max: 300, value: 1},
@@ -1107,17 +1108,8 @@ export class RFParty extends EventEmitter {
         {type: 'range', label: 'Distance Filter (m)', min: 0, max: 100, value: 1},
       ],
         {
-          title: 'Geolocation',
-          container: fullContent,
-          theme: SettingsTheme,
-          orientation: 'left',
-          collapsible: true,
-          fontFamily: 'Roboto Condensed',
-          labelWidth: '30%',
-          fontSize: '16px',
-          style:{
-            width: '100vw'
-          }
+          title: 'Location',
+          ...settings_config
         }
       )
 
@@ -1131,9 +1123,14 @@ export class RFParty extends EventEmitter {
     MainWindow.hideDiv('full-content')
     MainWindow.addRemoveClass('full-content', 'remove', 'settings-panel-container')
 
-    for(let child of fullContent.children) {
-      if(child.id != 'full-content-header'){
-        fullContent.removeChild(child)
+    let children = fullContent.children
+    for(let idx=0; idx<children.length; idx++) {
+      let child = children[idx]
+      if(!child.id || child.id != 'full-content-header'){
+        child.remove()
+        idx--
+        //fullContent.removeChild(elem)
+        //delete elem
       }
     }
 
