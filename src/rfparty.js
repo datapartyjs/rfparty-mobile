@@ -1054,9 +1054,8 @@ export class RFParty extends EventEmitter {
     else if(this.mode == 'settings'){
       let fullContent = document.getElementById('full-content')
       let fullContentTitle = document.getElementById('full-content-title')
-      window.SoftInputMode.set('adjustUnspecified')
+      window.SoftInputMode.set('adjustResize')
 
-      MainWindow.showDiv('full-content')
 
       fullContentTitle.textContent = this.mode.charAt(0).toUpperCase() + this.mode.slice(1)
 
@@ -1067,7 +1066,7 @@ export class RFParty extends EventEmitter {
         collapsible: true,
         collapsed: true,
         fontFamily: 'Roboto Condensed',
-        labelWidth: '30%',
+        labelWidth: '50%',
         fontSize: '16px',
         style:{
           width: '100vw'
@@ -1079,9 +1078,11 @@ export class RFParty extends EventEmitter {
         {type: 'checkbox', label: 'Start on boot', value: false},
         {type: 'checkbox', label: 'Start fullscreen', value: true},
         {type: 'checkbox', label: 'Keep screen on', value: true},
+        {type: 'checkbox', label: 'Read Only', value: false},
         {type: 'checkbox', label: 'Persistant Storage', value: true},
         {type: 'checkbox', label: 'Delete Old Data', value: false},
-        {type: 'range', label: 'Max age (days)', min: 0, max: 365, default: 31},
+        {type: 'number', label: 'Max age (days)', min: 0, max: 365, value: 31},
+        {type: 'checkbox', label: 'Show Status Bar', value: true},
       ],
         {
           title: 'General',
@@ -1089,9 +1090,28 @@ export class RFParty extends EventEmitter {
         }
       )
 
+      let map_layers_settings = new SettingsPanel([
+        {type: 'checkbox', label: 'Draw Current Location', value: true},
+        {type: 'checkbox', label: 'Draw Location History', value: true},
+        {type: 'checkbox', label: 'Draw GPS Quality', value: true},
+        {type: 'select', label: 'Location Style', options: ['line', 'points', 'heatmap'], value: 'line'},
+        {type: 'color', label: 'Location Color', value: 'grey'},
+        {type: 'select', label: 'BLE Station Style', options: ['packets', 'range', 'quality', 'point', 'location', 'heatmap'], value: 'location'},
+        {type: 'color', label: 'BLE First Seen Color', value: 'white'},
+        {type: 'color', label: 'BLE Last Seen Color', value: 'yellow'},
+        {type: 'color', label: 'BLE Observations Color', value: 'green'},
+        {type: 'color', label: 'BLE Path Color', value: 'blue'},
+
+      ],
+        {
+          title: 'Map Layers',
+          ...settings_config
+        }
+      )
+
       let bluetooth_settings = new SettingsPanel([
         {type: 'checkbox', label: 'Active Scanning', value: true},
-        {type: 'range', label: 'Scan Interval (s)', min: 0, max: 600, default: 60},
+        {type: 'number', label: 'Scan Interval (s)', min: 0, max: 600, value: 60},
       ],
         {
           title: 'Bluetooth',
@@ -1101,11 +1121,11 @@ export class RFParty extends EventEmitter {
 
       let location_settings = new SettingsPanel([
         {type: 'select', label: 'Location Provider', options: ['distance', 'activity', 'raw'], value: 'raw'},
-        {type: 'range', label: 'Interval (s)', min: 0, max: 300, default: 5},
-        {type: 'range', label: 'Fastest Interval (s)', min: 0, max: 300, value: 1},
-        {type: 'range', label: 'Activities Interval (s)', min: 0, max: 300, value: 5},
-        {type: 'range', label: 'Stationary Radius (m)', min: 0, max: 100, value: 5},
-        {type: 'range', label: 'Distance Filter (m)', min: 0, max: 100, value: 1},
+        {type: 'number', label: 'Interval (s)', min: 0, max: 300, value: 5},
+        {type: 'number', label: 'Fastest Interval (s)', min: 0, max: 300, value: 1},
+        {type: 'number', label: 'Activities Interval (s)', min: 0, max: 300, value: 5},
+        {type: 'number', label: 'Stationary Radius (m)', min: 0, max: 100, value: 5},
+        {type: 'number', label: 'Distance Filter (m)', min: 0, max: 100, value: 1},
       ],
         {
           title: 'Location',
@@ -1113,7 +1133,10 @@ export class RFParty extends EventEmitter {
         }
       )
 
+      MainWindow.showDiv('full-content')
     }
+
+
   }
 
   closeFullContent(){

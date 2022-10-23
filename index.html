@@ -43,15 +43,51 @@
           <!--<div class="dialog__body">-->
 
             <ul class="menu menu_invert dialog__body background-night">
-              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-map" class="menu__action is-active"><span class="menu__text">Map</span></button></li>
-              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-list" class="menu__action"><span class="menu__text">List</span></button></li>
-              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-range" class="menu__action"><span class="menu__text">Range</span></button></li>
-              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-summary" class="menu__action"><span class="menu__text">Summary</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-map" class="menu__action menu__action_icon is-active">
+                <span class="menu__text">Map</span>
+                <i data-feather="map"></i>
+              </button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-list" class="menu__action menu__action_icon">
+                <span class="menu__text">List</span>
+                <i data-feather="list"></i>
+              </button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-range" class="menu__action menu__action_icon">
+                <span class="menu__text">Range</span>
+                <i data-feather="radio"></i>
+              </button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-summary" class="menu__action menu__action_icon">
+                <span class="menu__text">Summary</span>
+                <i data-feather="pie-chart"></i>
+              </button></li>
               <li class="menu__sep"></li>
-              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-bookmarks" class="menu__action"><span class="menu__text">Bookmarks</span></button></li>
-              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-tools" class="menu__action"><span class="menu__text">Tools</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-alert" class="menu__action menu__action_icon">
+                <span class="menu__text">Alerts</span>
+                <i data-feather="activity"></i>
+              </button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-bookmarks" class="menu__action menu__action_icon">
+                <span class="menu__text">Bookmarks</span>
+                <i data-feather="bookmark"></i>
+              </button></li>
+              
               <li class="menu__sep"></li>
-              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-settings" class="menu__action"><span class="menu__text">Settings</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-code" class="menu__action menu__action_icon">
+                <span class="menu__text">Code</span>
+                <i data-feather="code"></i>
+              </button></li>
+              
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-devices" class="menu__action menu__action_icon">
+                <span class="menu__text">Devices</span>
+                <i data-feather="terminal"></i>
+              </button></li>
+              <li class="menu__sep"></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-settings" class="menu__action menu__action_icon">
+                <span class="menu__text">Settings</span>
+                <i data-feather="sliders"></i>
+              </button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-about" class="menu__action menu__action_icon">
+                <span class="menu__text">About</span>
+                <i data-feather="info"></i>
+              </button></li>
             </ul>
           <!--</div>-->
           <div class="dialog__footer background-night invert">
@@ -99,6 +135,14 @@
           <li class="menu_item">
             <button class="menu__action menu__action_icon">
               <i data-feather="layers"></i>
+            </button>
+          </li>
+        </ul>
+
+        <ul id="share-button" class="menu share-button menu_invert">
+          <li class="menu_item">
+            <button class="menu__action menu__action_icon">
+              <i data-feather="share-2"></i>
             </button>
           </li>
         </ul>

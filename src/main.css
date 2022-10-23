@@ -258,6 +258,20 @@ button {
   bottom: 80px;
 }
 
+
+.share-button {
+  z-index: 1;
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+
+  width: 50px;
+  height: 60px;
+
+  right: 10px;
+  bottom: 140px;
+}
+
 .content {
   z-index: 0;
   position: absolute;
