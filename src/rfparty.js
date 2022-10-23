@@ -2,6 +2,7 @@
 //import { scan } from 'node-wifi'
 
 import Drawer from '@vrembem/drawer';
+import { labelWidth } from 'settings-panel/theme/none';
 /*import '@vrembem/drawer/dist/styles.css';
 import '@vrembem/icon/dist/styles.css';
 import '@vrembem/menu/dist/styles.css';*/
@@ -20,11 +21,14 @@ const EarthDistance = require('earth-distance-js')
 const RFPartyDocuments = require('./documents')
 
 import * as UUID16_TABLES from './16bit-uuid-tables'
+import { MainWindow } from './main-window';
 import * as MANUFACTURER_TABLE from './manufacturer-company-id.json' 
 import { UUIDParser } from './parsers/uuid-parser'
 const DeviceIdentifiers = require('./device-identifiers')
 
 const JSONViewer = require('json-viewer-js/src/jsonViewer')
+const SettingsPanel = require('settings-panel')
+const SettingsTheme = require('settings-panel/theme/dragon')
 
 const TILE_SERVER_DEFAULT = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const TILE_SERVER_DARK = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
@@ -53,6 +57,7 @@ function toLoc(location){
     lon: location.longitude || 0
   }
 }
+
 
 
 /**
@@ -90,6 +95,8 @@ export class RFParty extends EventEmitter {
     super()
 
     this.party = party
+
+    this.mode = 'map'
 
     this.showAllTracks = true
     this.showAwayTracks = false
@@ -233,12 +240,12 @@ export class RFParty extends EventEmitter {
     })
 
     
-    this.drawer = new Drawer({
+    this.drawers = new Drawer({
       selectorInert: '.drawer-main',
       selectorOverflow: 'body, .drawer-main'
     });
     
-    await this.drawer.init();
+    await this.drawers.init();
   }
 
   async handleSearch(input){
@@ -1026,5 +1033,111 @@ export class RFParty extends EventEmitter {
     }
 
     return names
+  }
+
+  static get SettingsPanel(){
+    return SettingsPanel
+  }
+
+
+
+  async setMode(mode){
+    this.last_mode = this.mode
+    this.mode = mode
+
+    await this.drawers.get('drawer').close()
+
+    if(this.mode == 'map'){
+      MainWindow.hideDiv('full-content')
+    }
+    else if(this.mode == 'settings'){
+      let fullContent = document.getElementById('full-content')
+      let fullContentTitle = document.getElementById('full-content-title')
+
+      MainWindow.showDiv('full-content')
+
+      fullContentTitle.textContent = this.mode.charAt(0).toUpperCase() + this.mode.slice(1)
+
+
+      let general_settings = SettingsPanel([
+        {type: 'checkbox', label: 'Persistant Storage', value: true},
+        {type: 'checkbox', label: 'Delete Old Data', value: false},
+        {type: 'range', label: 'Max age (days)', min: 0, max: 365, default: 31},
+      ],
+        {
+          title: 'General',
+          container: fullContent,
+          theme: SettingsTheme,
+          orientation: 'left',
+          collapsible: true,
+          fontFamily: 'Roboto Condensed',
+          labelWidth: '30%',
+          fontSize: '16px',
+          style:{
+            width: '100vw'
+          }
+        }
+      )
+
+      let bluetooth_settings = SettingsPanel([
+        {type: 'checkbox', label: 'Active Scanning', value: true},
+        {type: 'range', label: 'Scan Interval (s)', min: 0, max: 600, default: 60},
+      ],
+        {
+          title: 'Bluetooth',
+          container: fullContent,
+          theme: SettingsTheme,
+          orientation: 'left',
+          collapsible: true,
+          fontFamily: 'Roboto Condensed',
+          labelWidth: '30%',
+          fontSize: '16px',
+          style:{
+            width: '100vw'
+          }
+        }
+      )
+
+      let geo_settings = SettingsPanel([
+        {type: 'select', label: 'Location Provider', options: ['distance', 'activity', 'raw'], value: 'raw'},
+        {type: 'range', label: 'Interval (s)', min: 0, max: 300, default: 5},
+        {type: 'range', label: 'Fastest Interval (s)', min: 0, max: 300, value: 1},
+        {type: 'range', label: 'Activities Interval (s)', min: 0, max: 300, value: 5},
+        {type: 'range', label: 'Stationary Radius (m)', min: 0, max: 100, value: 5},
+        {type: 'range', label: 'Distance Filter (m)', min: 0, max: 100, value: 1},
+      ],
+        {
+          title: 'Geolocation',
+          container: fullContent,
+          theme: SettingsTheme,
+          orientation: 'left',
+          collapsible: true,
+          fontFamily: 'Roboto Condensed',
+          labelWidth: '30%',
+          fontSize: '16px',
+          style:{
+            width: '100vw'
+          }
+        }
+      )
+
+    }
+  }
+
+  closeFullContent(){
+    let fullContent = document.getElementById('full-content')
+    let fullContentTitle = document.getElementById('full-content-title')
+
+    MainWindow.hideDiv('full-content')
+    MainWindow.addRemoveClass('full-content', 'remove', 'settings-panel-container')
+
+    for(let child of fullContent.children) {
+      if(child.id != 'full-content-header'){
+        fullContent.removeChild(child)
+      }
+    }
+
+    this.mode = this.last_mode
+    this.setMode(this.last_mode)
   }
 }

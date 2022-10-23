@@ -15,6 +15,7 @@ const onLocationDebug = Debug('geolocation')
 const moment = require('moment')
 
 
+
 const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schema.json')
 
@@ -84,11 +85,33 @@ window.status_text = ''
 
 window.channel = null
 
+window.current_mode = 'map'
+window.last_mode = 'map'
+
 export class MainWindow {
 
   static get scanWindow() {
     return 60000
   }
+
+
+  static async onMenuSelect(menuButton){
+    let currentMenu = 'menu-'+window.current_mode
+    MainWindow.addRemoveClass(currentMenu, 'remove', 'is-active')
+    MainWindow.addRemoveClass(menuButton.id, 'add', 'is-active')
+
+    window.last_mode = window.current_mode
+    window.current_mode = menuButton.id.replace('menu-','')
+
+    debug('Active Mode:', window.current_mode)
+
+    await window.rfparty.setMode(window.current_mode)
+  }
+
+  static async closeFullContent(evt){
+    await window.rfparty.closeFullContent(evt)
+  }
+
 
   static async onload(divId, channel) {
     debug('RFParty.onload')

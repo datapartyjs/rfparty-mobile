@@ -123,6 +123,19 @@ button {
   background: rgb(7, 48, 48);
 }
 
+.full-content {
+  z-index: 2;
+  position: absolute;
+  top: 20px;
+  right: 0px;
+  left: 0px;
+  bottom: 0px;
+  display: flex;
+  width: 100vw;
+  height: calc(100vh - 20px);
+  overflow-y: auto;
+}
+
 .device-info {
   z-index: 1;
   position: absolute;

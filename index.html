@@ -43,15 +43,15 @@
           <!--<div class="dialog__body">-->
 
             <ul class="menu menu_invert dialog__body background-night">
-              <li class="menu__item"><button class="menu__action is-active"><span class="menu__text">Map</span></button></li>
-              <li class="menu__item"><button class="menu__action"><span class="menu__text">List</span></button></li>
-              <li class="menu__item"><button class="menu__action"><span class="menu__text">Range</span></button></li>
-              <li class="menu__item"><button class="menu__action"><span class="menu__text">Summary</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-map" class="menu__action is-active"><span class="menu__text">Map</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-list" class="menu__action"><span class="menu__text">List</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-range" class="menu__action"><span class="menu__text">Range</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-summary" class="menu__action"><span class="menu__text">Summary</span></button></li>
               <li class="menu__sep"></li>
-              <li class="menu__item"><button class="menu__action"><span class="menu__text">Bookmarks</span></button></li>
-              <li class="menu__item"><button class="menu__action"><span class="menu__text">Tools</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-bookmarks" class="menu__action"><span class="menu__text">Bookmarks</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-tools" class="menu__action"><span class="menu__text">Tools</span></button></li>
               <li class="menu__sep"></li>
-              <li class="menu__item"><button class="menu__action"><span class="menu__text">Settings</span></button></li>
+              <li class="menu__item"><button onClick="MainWindow.onMenuSelect(this)" id="menu-settings" class="menu__action"><span class="menu__text">Settings</span></button></li>
             </ul>
           <!--</div>-->
           <div class="dialog__footer background-night invert">
@@ -116,6 +116,14 @@
         </div>
   
         <div id="map" class="content"></div>
+        <div id="full-content" class="full-content background-night hidden">
+          <div id="full-content-header" class="full-content-header dialog__header background-night invert" style="z-index: 1;">
+            <h2 id="full-content-title"></h2>
+            <button class="dialog__close icon-action" onclick="MainWindow.closeFullContent(this)" aria-label="Close button">
+              <i data-feather="x"></i>
+            </button>
+          </div>
+        </div>
   
               <!-- The Modal -->
         <div id="setup-modal" class="modal hidden">

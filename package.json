@@ -87,6 +87,7 @@
     "moment-timezone": "^0.5.34",
     "pify": "^6.1.0",
     "promisfy": "^1.2.0",
+    "settings-panel": "^1.8.17",
     "xml-js": "^1.6.11"
   },
   "staticFiles": {
