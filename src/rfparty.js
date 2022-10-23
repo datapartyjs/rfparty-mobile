@@ -1,8 +1,10 @@
 //import { point } from 'leaflet'
 //import { scan } from 'node-wifi'
 
-import { last } from 'lodash'
-
+import Drawer from '@vrembem/drawer';
+/*import '@vrembem/drawer/dist/styles.css';
+import '@vrembem/icon/dist/styles.css';
+import '@vrembem/menu/dist/styles.css';*/
 
 const debug = /*(...args)=>{ debug('rfparty', ...args) }*/  require('debug')('rfparty')
 const Leaflet = require('leaflet')
@@ -230,6 +232,13 @@ export class RFParty extends EventEmitter {
       }
     })
 
+    
+    this.drawer = new Drawer({
+      selectorInert: '.drawer-main',
+      selectorOverflow: 'body, .drawer-main'
+    });
+    
+    await this.drawer.init();
   }
 
   async handleSearch(input){

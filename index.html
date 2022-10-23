@@ -11,89 +11,143 @@
     <link rel="stylesheet" href="./node_modules/leaflet/dist/leaflet.css"/>
 
     <link rel="stylesheet" href="./src/main.css"/>
+    <!--<link rel="stylesheet" href="./src/addons.scss" />-->
+
+    <script src="node_modules/feather-icons/dist/feather.min.js"></script>-
   </head>
 
   <!--<body onload="MainWindow.onload('map')">-->
   <body>
+
+
+
+    <div class="drawer-frame">
+
       <div id='modal-shadow' class='modal-shadow'></div>
       <div class='header' id='header' >
         rfparty
       </div>
 
-      <div class='search-bar'>
-        <input id='search-input' class='search-input' type="search" placeholder="search" disabled>
-          <div class="search-clear" id="search-clear" onclick="document.getElementById('search-input').value=null">X</div>
-        </input>
-      </div>
-      <span id='search-hint' class='search-hint hidden'></span>
-      <span id='search-status' class='search-status hidden'></span>
+      <aside id="drawer" class="drawer drawer_modal">
+        <div class="drawer__dialog dialog" style="background: none;" role="dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
+          <div class="dialog__header background-night invert">
+            <h2 id="dialog-title">Menu</h2>
+
+            <!--<button class="dialog__close icon-action drawer__trigger" data-drawer-close=""> <svg class="icon icon-x" role="img" aria-hidden="true"> <use xlink:href="#icon-x"></use> </svg> </button>-->
+
+            
+            <button class="dialog__close icon-action" data-drawer-toggle="drawer" aria-label="Close button">
+              <i data-feather="x"></i>
+            </button>
+          </div>
+          <!--<div class="dialog__body">-->
+
+            <ul class="menu menu_invert dialog__body background-night">
+              <li class="menu__item"><button class="menu__action is-active"><span class="menu__text">Map</span></button></li>
+              <li class="menu__item"><button class="menu__action"><span class="menu__text">List</span></button></li>
+              <li class="menu__item"><button class="menu__action"><span class="menu__text">Range</span></button></li>
+              <li class="menu__item"><button class="menu__action"><span class="menu__text">Summary</span></button></li>
+              <li class="menu__sep"></li>
+              <li class="menu__item"><button class="menu__action"><span class="menu__text">Bookmarks</span></button></li>
+              <li class="menu__item"><button class="menu__action"><span class="menu__text">Tools</span></button></li>
+              <li class="menu__sep"></li>
+              <li class="menu__item"><button class="menu__action"><span class="menu__text">Settings</span></button></li>
+            </ul>
+          <!--</div>-->
+          <div class="dialog__footer background-night invert">
+            <span><span class='footer-logo'>rfparty</span> - <span id='version-text-drawer'></span> </span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="drawer-main drawer-content">
+
+        <ul class="menu_button menu_invert">
+          <li class="menu_item">
+            <button class="menu__action menu__action_icon" data-drawer-toggle="drawer">
+              <i data-feather="menu"></i>
+            </button>
+          </li>
+        </ul>
   
-      <div class="status-area">
-        <span id='status-text'>Status</span><span id='status-dot' class='green-dot'></span>
-      </div>
-
-      <div id='center-modal' class="center-modal">
-        <div class="rainbows hidden" id='logo' >rfparty</div>
-        
-     
-      
-        <div id='loading-bar' class='loading-bar hidden'>
-          <center><span id='loading-text'>Loading <span id='loading-value'>0</span>%</span></center>
-          <progress id="loading-progress-bar" class='loading-progress-bar' max="100" value="0"></progress>
-          <button id='loading-start-button' class='loading-start-button hidden' onclick='MainWindow.reload()'>Start</button>
-          <textarea id='loading-details' class='loading-details' readonly disabled>
-          </textarea>
-          <br/>
-          <center>
-            <a class="large-link" href="#" onclick="window.open('https://www.dataparty.xyz/rfparty/privacy-policy.html', '_system'); return false;">Privacy Policy</a>
-          </center>
+        <div class='search-bar'>
+          <input id='search-input' class='search-input' type="search" placeholder="search" disabled>
+            <div class="search-clear" id="search-clear" onclick="document.getElementById('search-input').value=null">X</div>
+          </input>
         </div>
-      </div>
-
-      <div id="device-info" class='device-info hidden'>
-        <span class="close" onclick="window.MainWindow.hideDiv('device-info')">X</span>
-        <h3 id='device-info-name'>name</h3>
-        <span id='device-info-duration'>duration</span><br>
-        <span id='device-info-address'>address</span><br>
-        <span id='device-info-company'>company</span><br>
-
-        <h4>Services</h4>
-
-        <span id='device-info-services'></span>
-        <div id='device-info-details' class='device-info-details'>
-          <div id='device-info-detailscontainer'></div>
-        </div>
-      </div>
-
-      <div id="map" class="content"></div>
-
-            <!-- The Modal -->
-      <div id="setup-modal" class="modal hidden">
-
-        <!-- Modal content -->
-        <div class="modal-content">
-          <form name="setupForm">
-          <div class="modal-header">
-            <span class="close">&times;</span>
-            <h2>Setup</h2>
-          </div>
-          <div class="modal-body">
+        <span id='search-hint' class='search-hint hidden'></span>
+        <span id='search-status' class='search-status hidden'></span>
     
-              <p>
-                <center><button class='setup-submit' type="submit">load</button></center>
-              </p>
-          </div>
-          </form>
+        <div class="status-area">
+          <span id='status-text'>Status</span><span id='status-dot' class='green-dot'></span>
         </div>
-
-      </div>
-
+  
+        <div id='center-modal' class="center-modal">
+          <div class="rainbows hidden" id='logo' >rfparty</div>
+          
+       
+        
+          <div id='loading-bar' class='loading-bar hidden'>
+            <center><span id='loading-text'>Loading <span id='loading-value'>0</span>%</span></center>
+            <progress id="loading-progress-bar" class='loading-progress-bar' max="100" value="0"></progress>
+            <button id='loading-start-button' class='loading-start-button hidden' onclick='MainWindow.reload()'>Start</button>
+            <textarea id='loading-details' class='loading-details' readonly disabled>
+            </textarea>
+            <br/>
+            <center>
+              <a class="large-link" href="#" onclick="window.open('https://www.dataparty.xyz/rfparty/privacy-policy.html', '_system'); return false;">Privacy Policy</a>
+            </center>
+          </div>
+        </div>
+  
+        <div id="device-info" class='device-info hidden'>
+          <span class="close" onclick="window.MainWindow.hideDiv('device-info')">X</span>
+          <h3 id='device-info-name'>name</h3>
+          <span id='device-info-duration'>duration</span><br>
+          <span id='device-info-address'>address</span><br>
+          <span id='device-info-company'>company</span><br>
+  
+          <h4>Services</h4>
+  
+          <span id='device-info-services'></span>
+          <div id='device-info-details' class='device-info-details'>
+            <div id='device-info-detailscontainer'></div>
+          </div>
+        </div>
+  
+        <div id="map" class="content"></div>
+  
+              <!-- The Modal -->
+        <div id="setup-modal" class="modal hidden">
+  
+          <!-- Modal content -->
+          <div class="modal-content">
+            <form name="setupForm">
+            <div class="modal-header">
+              <span class="close">&times;</span>
+              <h2>Setup</h2>
+            </div>
+            <div class="modal-body">
       
+                <p>
+                  <center><button class='setup-submit' type="submit">load</button></center>
+                </p>
+            </div>
+            </form>
+          </div>
+  
+        </div>
+  
+        
+  
+        <footer class='footer-left'>
+          <span><span class='footer-logo'>rfparty</span> - <span id='version-text'></span> </span>
+  
+        </footer> 
+  
+      </div>
+    </div>
 
-      <footer class='footer-left'>
-        <span><span class='footer-logo'>rfparty</span> - <span id='version-text'></span> </span>
-
-      </footer> 
 
       <!--<footer class='footer-right'>
         <small>map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a></small>
@@ -102,5 +156,6 @@
       <script type="text/javascript" src="./cordova.js"></script>
       <script src="src/app.js" type="module"></script>
 
+      <icon src="./node_modules/feather-icons/dist/feather-sprite.svg" style="disply: none" class="hidden"></icon>
     </body>
 </html>

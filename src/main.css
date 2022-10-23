@@ -1,4 +1,11 @@
 
+@import 'npm:@vrembem/button/dist/styles.css';
+@import 'npm:@vrembem/dialog/dist/styles.css';
+@import 'npm:@vrembem/drawer/dist/styles.css';
+@import 'npm:@vrembem/icon-action/dist/styles.css';
+@import 'npm:@vrembem/icon/dist/styles.css';
+@import 'npm:@vrembem/menu/dist/styles.css';
+
 * {
   margin:0;
   padding:0;
@@ -12,6 +19,11 @@
 
 ::selection { background: transparent;color:inherit; }
 ::-moz-selection { background: transparent;color:inherit; }
+
+:focus {
+  outline: none;
+  box-shadow: 0 0 0 0px rgba(255, 255, 255, 0);
+}
 
 @font-face {
   font-family: 'Permanent Marker';
@@ -31,11 +43,16 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-html, body {
-  height: 100%
+html {
+  overflow: hidden;
+  min-height: 100%;
+  margin: 0;
 }
 
 body{
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
   display: flex;
   align-items: stretch;
   background-color: rgb(15, 22, 20);
@@ -51,9 +68,46 @@ body{
   font-family: 'Permanent Marker';
 }
 
+
 .hidden {
   visibility: hidden;
   display: none;
+}
+
+.invert {
+  color: white;
+}
+
+.drawer-frame {
+  position: absolute;
+}
+
+.dialog__close {
+  position: absolute;
+  right: 10px;
+}
+
+.drawer-content {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  margin: 0;
+}
+
+.drawer__dialog {
+  background: none;
+}
+
+.background-night {
+  background-color: #424242de !important;
+}
+
+button {
+  border: 0px;
+}
+
+.menu__text {
+  font-size: 24px;
 }
 
 .content {
@@ -148,6 +202,19 @@ body{
 
 
   left: 60px;
+  top:40px;
+}
+
+.menu_button {
+  z-index: 1;
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+
+  width: 20px;
+  height: 20px;
+
+  left: 10px;
   top:40px;
 }
 

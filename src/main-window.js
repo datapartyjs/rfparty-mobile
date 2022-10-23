@@ -92,14 +92,20 @@ export class MainWindow {
 
   static async onload(divId, channel) {
     debug('RFParty.onload')
+    feather.replace()
     window.rfparty = new RFParty(divId)
 
     const form = document.getElementsByName('setupForm')[0]
     form.addEventListener('submit', MainWindow.startSession);
 
     const versionText = document.getElementById('version-text')
+    const versionTextDrawer = document.getElementById('version-text-drawer')
     if(versionText){
       versionText.innerText = 'v' + RFParty.Version
+    }
+
+    if(versionTextDrawer){
+      versionTextDrawer.innerText = 'v' + RFParty.Version
     }
 
     window.channel = channel
