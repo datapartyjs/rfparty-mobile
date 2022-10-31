@@ -1,134 +1,90 @@
-# Cordova & parcel
+# RFParty Mobile App!
 
-Utilisation de ![](https://cordova.apache.org/static/img/cordova_24.png) [Cordova](https://cordova.apache.org/) avec le bundler ![](https://parceljs.org/assets/parcel.png) [ParcelJS](https://parceljs.org/).
+[rfparty is a new way to see BLE](https://blog.dataparty.xyz/blog/rfparty-a-new-way-to-see-ble/)
 
-## Pré-requis (Windows)
+[![rfparty collage ](https://img.youtube.com/vi/kDboDShA8do/0.jpg)](https://www.youtube.com/watch?v=kDboDShA8do)
 
-Vous devez avoir installé [NodeJS](https://nodejs.org/) pour la gestion des dépendances.
-
-Vous devez avoir au préalable installé [l'environnement de développement d'Android](https://cordova.apache.org/docs/en/latest/guide/platforms/android/index.html#installing-the-requirements) :
-- la JDK 1.8 (voir ici si besoins: https://github.com/AdoptOpenJDK/openjdk8-releases/releases)
-- [Gradle](https://gradle.org/install/)
-- le Android Platform SDK 18 (via Android Studio) ansi que les Android SDK build-tools version 19.1.0 
-
-Dans les variables d'environnement il faut ajouter :
-- `JAVA_HOME` : pointe sur le répertoire de la JDK
-- `ANDROID_HOME` : répertoire du SKD Android (disponible dans l'onglet du SDK manager de Android Studio)
-- dans `PATH` : le chemin des répertoires `tools`, `tools/bin`, and `platform-tools` depuis `ANDROID_HOME`
+Based on ![](https://cordova.apache.org/static/img/cordova_24.png) [Cordova](https://cordova.apache.org/) and the bundler ![](https://parceljs.org/assets/parcel.png) [ParcelJS](https://parceljs.org/).
 
 ## Installation
 
-Récupérer le projet et lancer la commande d'installation des composants.
+Clone this project and run the npm package installation command.
 ```
 $ npm install
 ```
-Une fois les composants installés, initialisez le projet via la commande init:
+Once the components are installed, initialize the project via the init command:
 ```
 $ npm run init
 ```
 
-Au final, le répertoire doit contenir les dossiers suivant (hooks, platforms et plugins sont générés par init et ne sont pas intégrés au git) :
-```
-├[+].git
-├─[+] hooks
-├─[+] node_modules
-├─[+] platforms
-├─[+] plugins
-├─[+] res
-├─[+] scripts
-|  ├──init.js
-|  └──parcel.js
-├─[+] src
-|  ├─[+] assets
-|  ├─[+] img
-|  ├──app.js
-|  └──style.css
-├──config.xml
-├──index.html
-├──index.js
-├──package.json
-└──readme.md
-```
-
-Editez les fichiers `config.xml` et `package.json` afin de refléter l'identité de votre projet (identifiant, nom, version, etc.).
-
-Ajoutez une platform au projet, comme n'importe quel projet cordova.
+Add a platform to the project, like any cordova project.
 ````
 $ npx cordova platform add android
 ````
 
-## Principe
+# Development
 
-![](https://i.imgur.com/X0iSUqI.png) Le projet utilise [ParcelJS](https://parceljs.org/) pour l'empaquetage de l'application dans le répertoire `./www` de cordova.
-```
-$ npm run build
-```
-> `parcel build index.html --no-content-hash --public-url . --out-dir ./www index.html`
+## Build
 
-Les sources sont dans le répertoire `./src`, le point d'entrée principal est dans le répertoire courant (`index.html` & `index.js`).    
-Le répertoire d'assets (`src/assets`) est recopié à la racine du répertoire `./www` lors de l'empaquetage (plugin `parcel-plugin-static-files-copy`).
-
-### Build
-
-Le script cordova `parcel.js` est branché sur les hook `before_build` et `before_run` pour lancer l'empaquetage avant le build ou le run (`config.xml`).
+The `parcel.js` cordova script is plugged into the `before_build` and `before_run` hooks to start packaging before the build or run (`config.xml`).
 ```
 $ npx cordova run
 ```
 Processing flow :
 > `npm run build` > `cordova run`
 
-### Lint
+## Lint
 
-Le projet est fourni avec un outil d'analyse statique du code (eslint). Pour le lancer, utilisez la commande:
+The project comes with a static code analysis tool (eslint). To launch it, use the command:
 ```
 $ npm run lint
 ```
 
 ## Usage
 
-### Page web & Live reload
-Parcel permet un affichage du projet dans un navigateur.
-Si cela ne donne pas accès aux fonctionnalités du device (photo, système de fichier), cela permet de tester les fonctionnalités de manière plus rapide qu'une installation sur un smartphone (mise en page, css; etc.).
+### Build RFParty
 
-Démarrer une serveur + live reload
-```
-$ npm start
-```
-Aller sur la page http://localhost:1234 pour voir l'application.
-
-### Empaqueter l'application :
-
-L'empaquetage se fait sans les sourcemaps et en minifiant le code.
+To package without the sourcemaps and minify the code run the build command.
 ```
 $ npm run build
 ```
-Si on ne veut pas minifier le code (debug) :
+If you don't want to minify the code (debug):
 ```
 $ npm run build-dev
 ```
 
-### Lancer l'application sur un smartphone
-Commande `run` classique de Cordova.
+### Launch RFParty on a smartphone emulator
+Basic Cordova `run` command:
 ```
 $ npx cordova run
 ```
-En mode debug (non minifié)
+In debug mode (not minified):
 ```
 $ npx cordova run --dev
 ```
-NB: les sourcemaps `.map` ne sont pas accessible depuis le device, seul une version non minifiée est accessible en mode debug.
+Note: `.map` sourcemaps are not accessible from the device, only an unminified version is accessible in debug mode.
 
-### Compiler l'application 
-Commande `build` classique de Cordova.
+### Build RF Party
+Basic Cordova `build` command:
 ```
 $ npx cordova build
 ```
-Compiler (non minifier)
+Compile non minified:
 ```
 $ npx cordova build --dev
 ```
-Compiler en mode release
+Compile in release mode:
 ```
 $ npx cordova build --release
 $ npx cordova build android --buildConfig=build.json --release
 ```
+
+## Follow and Support
+
+ * [Twitter](https://twitter.com/datapartydao)
+ * [Buy it on Google Play](https://play.google.com/store/apps/details?id=xyz.dataparty.rfparty)
+ * Donate 🤲
+   * $eth - `0x430c1Bf9CbbbEA845651Ba1536d4B9795696dD5d`
+   * $btc(segwit) - `bc1qgynk82txpsadmmzz043lc7edcxd4xl5v8qqr0z`
+   * $btc(legacy) - `16wW7HaKvQfoWxZkFEPQysMnyNxjn8YNLN`
+   * $usdt - `0x62E8a85670A375A3f32E01D71f42ce71d908417B`
