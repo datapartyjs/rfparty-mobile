@@ -1074,6 +1074,11 @@ export class RFParty extends EventEmitter {
         className: 'settings-panel--collapsed'
       }
 
+      const cancelOrApply = 	[
+        {type: 'button', label: 'Cancel', style: {width: '50%'}},
+        {type: 'button', label: 'Apply', style: 'width: 50%'}
+      ]
+
       let general_settings = new SettingsPanel([
         {type: 'checkbox', label: 'Start on boot', value: false},
         {type: 'checkbox', label: 'Start fullscreen', value: true},
@@ -1083,6 +1088,7 @@ export class RFParty extends EventEmitter {
         {type: 'checkbox', label: 'Delete Old Data', value: false},
         {type: 'number', label: 'Max age (days)', min: 0, max: 365, value: 31},
         {type: 'checkbox', label: 'Show Status Bar', value: true},
+        ...cancelOrApply
       ],
         {
           title: 'General',
@@ -1101,7 +1107,7 @@ export class RFParty extends EventEmitter {
         {type: 'color', label: 'BLE Last Seen Color', value: 'yellow'},
         {type: 'color', label: 'BLE Observations Color', value: 'green'},
         {type: 'color', label: 'BLE Path Color', value: 'blue'},
-
+        ...cancelOrApply
       ],
         {
           title: 'Map Layers',
@@ -1112,6 +1118,7 @@ export class RFParty extends EventEmitter {
       let bluetooth_settings = new SettingsPanel([
         {type: 'checkbox', label: 'Active Scanning', value: true},
         {type: 'number', label: 'Scan Interval (s)', min: 0, max: 600, value: 60},
+        ...cancelOrApply
       ],
         {
           title: 'Bluetooth',
@@ -1126,6 +1133,7 @@ export class RFParty extends EventEmitter {
         {type: 'number', label: 'Activities Interval (s)', min: 0, max: 300, value: 5},
         {type: 'number', label: 'Stationary Radius (m)', min: 0, max: 100, value: 5},
         {type: 'number', label: 'Distance Filter (m)', min: 0, max: 100, value: 1},
+        ...cancelOrApply
       ],
         {
           title: 'Location',
