@@ -1,8 +1,5 @@
 {
   "plugins": {
-    "posthtml-inline-svg": {
-      "tag": "icon",
-      "attr": "src"
-    }
+
   }
 }

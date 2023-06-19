@@ -14,9 +14,9 @@ const debug = Debug('MainWindow')
 const onLocationDebug = Debug('geolocation')
 const moment = require('moment')
 
+require( '@dataparty/api/dist/dataparty-browser' )
 
-
-const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
+const Dataparty = window.Dataparty
 const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schema.json')
 
 const RFPartyDocuments = require('./documents')
@@ -39,6 +39,7 @@ window.last_crash_count = parseInt( localStorage.getItem('crash_count') ) || 0
 window.crash_count = parseInt( localStorage.getItem('crash_count') ) || 0
 
 window.nodejs_pending_calls = 0
+
 
 const byteToHex = [];
 for(let n=0; n<0xff; ++n){
