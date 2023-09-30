@@ -1,3 +1,5 @@
+const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
+window.Dataparty = Dataparty
 
 import {MainWindow} from './main-window'
 
@@ -12,9 +14,7 @@ window.rfparty = null
 window.RFParty = RFParty
 window.MainWindow = MainWindow
 
-const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
 
-window.Dataparty = Dataparty
 
 function channelListener(msg) {
   console.log('[cordova] received:' + msg);

@@ -14,7 +14,7 @@ const debug = Debug('MainWindow')
 const onLocationDebug = Debug('geolocation')
 const moment = require('moment')
 
-require( '@dataparty/api/dist/dataparty-browser' )
+//require( '@dataparty/api/dist/dataparty-browser' )
 
 const Dataparty = window.Dataparty
 const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schema.json')
