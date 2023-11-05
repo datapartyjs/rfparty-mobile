@@ -1,7 +1,7 @@
 {
   "name": "xyz.dataparty.rfparty",
   "displayName": "rfparty",
-  "version": "1.1.10",
+  "version": "1.1.12",
   "description": "A bluetooth tricorder",
   "source": "./index.html",
   "scripts": {
@@ -10,23 +10,25 @@
     "init": "node ./scripts/init.js",
     "prepare-nodejs": "cd www/nodejs-project && TARGET_ARCH=arm64 TARGET_PLATFORM=android npm install",
     "lint": "eslint --fix src/ || exit 0",
-    "package": "cordova run android --debug",
+    "package": "cordova build android --debug --dev; cp /home/alanm/rfparty-mobile/platforms/android/app/build/outputs/apk/debug/app-debug.apk rfparty-mobile.apk",
     "repackage": "cordova clean android; cordova run android --debug",
     "deploy": "cordova run android --debug",
     "clean-dataparty": "rm -rf node_modules/@dataparty/api; rm package-lock.json",
     "clean-nodejs": "cd www/nodejs-project && npm run clean",
     "build-nodejs": "cd www/nodejs-project && npm run build",
     "build-party": "./scripts/build-party.sh",
-    "build-dev": "parcel build index.html --no-optimize --no-source-maps --no-content-hash --public-url . --dist-dir ./www index.html",
-    "build": "npm run build-party; npm run build-nodejs; parcel build index.html --no-optimize --no-content-hash --no-scope-hoist --public-url . --dist-dir ./www index.html"
+    "build-dev": "npm run build-party; parcel build index.html --no-scope-hoist --no-optimize --no-content-hash --public-url . --dist-dir ./www index.html",
+    "build": "npm run build-party; npm run build-nodejs; parcel build --no-optimize --no-source-maps --no-content-hash --no-scope-hoist --public-url . --dist-dir ./www index.html"
   },
   "author": "Dataparty",
   "license": "Apache-2.0",
   "devDependencies": {
     "@mauron85/cordova-plugin-background-geolocation": "^3.1.0",
+    "@parcel/transformer-sass": "^2.9.2",
+    "assert": "^2.0.0",
     "buffer": "^6.0.3",
-    "cordova": "11.0.0",
-    "cordova-android": "^11.0.0",
+    "cordova": "12.0.0",
+    "cordova-android": "^12.0.1",
     "cordova-background-geolocation-plugin": "^2.0.7",
     "cordova-plugin-android-permissions": "^1.1.3",
     "cordova-plugin-androidx": "^3.0.0",
@@ -44,24 +46,44 @@
     "cordova-plugin-local-notification": "github:rgarciadelongoria/cordova-plugin-local-notifications",
     "cordova-plugin-play-default-sounds": "^1.0.1",
     "cordova-plugin-powermanagement-orig": "github:sevenbitbyte/cordova-plugin-powermanagement",
-    "cordova-plugin-purchase": "^11.0.0",
+    "cordova-plugin-purchase": "^13.0.0",
+    "cordova-plugin-softinputmode": "^1.0.3",
     "cordova-plugin-vibration": "^3.1.1",
     "cordova.plugins.diagnostic": "^7.1.0",
+    "crypto-browserify": "^3.12.0",
     "eslint": "8.19.0",
     "events": "^3.3.0",
-    "parcel": "2.6.2",
+    "parcel": "2.9.2",
     "parcel-plugin-clean-dist": "0.0.6",
     "parcel-plugin-static-files-copy": "2.6.0",
-    "parcel-resolver-ignore": "^2.1.3",
+    "parcel-resolver-ignore": "^2.1.5",
     "parcel-transformer-google-fonts": "^0.1.4",
-    "stream-browserify": "^3.0.0"
+    "path-browserify": "1.0.1",
+    "posthtml": "^0.16.6",
+    "posthtml-inline-svg": "^0.2.0",
+    "punycode": "^1.4.1",
+    "querystring-es3": "^0.2.1",
+    "sass": "^1.55.0",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "string_decoder": "^1.3.0",
+    "url": "^0.11.0",
+    "util": "^0.12.5"
   },
   "dependencies": {
-    "@dataparty/api": "datapartyjs/dataparty-api#browser-bundle",
-    "@dataparty/bouncer-model": "1.4.3",
+    "@dataparty/api": "file:../code/dataparty-api",
+    "@vrembem/base": "^3.0.10",
+    "@vrembem/button": "^3.0.10",
+    "@vrembem/core": "^3.0.10",
+    "@vrembem/dialog": "^3.0.10",
+    "@vrembem/drawer": "^3.0.10",
+    "@vrembem/icon": "^3.0.10",
+    "@vrembem/icon-action": "^3.0.10",
+    "@vrembem/menu": "^3.0.10",
     "csv": "^6.1.5",
     "debug": "^4.3.4",
     "earth-distance-js": "^1.4.1",
+    "feather-icons": "^4.29.0",
     "json-viewer-js": "^1.0.8",
     "json5": "^2.2.1",
     "jsonpath-plus": "^7.0.0",
@@ -74,6 +96,7 @@
     "moment-timezone": "^0.5.34",
     "pify": "^6.1.0",
     "promisfy": "^1.2.0",
+    "settings-panel": "^1.8.17",
     "xml-js": "^1.6.11"
   },
   "staticFiles": {
@@ -88,6 +111,11 @@
   "transforms": {
     "*.html": [
       "parcel-transformer-google-fonts"
+    ]
+  },
+  "stylePreprocessorOptions": {
+    "includePaths": [
+      "node_modules/"
     ]
   },
   "cordova": {
@@ -130,7 +158,8 @@
       "cordova-plugin-vibration": {},
       "cordova-plugin-deeplinks": {},
       "cordova-plugin-powermanagement-orig": {},
-      "cordova-plugin-background-mode": {}
+      "cordova-plugin-background-mode": {},
+      "cordova-plugin-softinputmode": {}
     },
     "platforms": [
       "android"

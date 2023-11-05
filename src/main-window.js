@@ -14,8 +14,9 @@ const debug = Debug('MainWindow')
 const onLocationDebug = Debug('geolocation')
 const moment = require('moment')
 
+//require( '@dataparty/api/dist/dataparty-browser' )
 
-const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
+const Dataparty = window.Dataparty
 const RFPartyModel = require('../dataparty/xyz.dataparty.rfparty.dataparty-schema.json')
 
 const RFPartyDocuments = require('./documents')
@@ -39,6 +40,7 @@ window.crash_count = parseInt( localStorage.getItem('crash_count') ) || 0
 
 window.nodejs_pending_calls = 0
 
+
 const byteToHex = [];
 for(let n=0; n<0xff; ++n){
   const hexOctet = n.toString(16).padStart(2, '0')
@@ -54,6 +56,14 @@ function hexString(arrayBuffer){
   }
 
   return hexOctets.join('')
+}
+
+function p (fn){
+  return ()=>{
+    return new Promise((resolve,reject)=>{
+      fn(resolve,reject)
+    })
+  }
 }
 
 const SearchSuggestions = {
@@ -84,22 +94,50 @@ window.status_text = ''
 
 window.channel = null
 
+window.current_mode = 'map'
+window.last_mode = 'map'
+
 export class MainWindow {
 
   static get scanWindow() {
     return 60000
   }
 
+
+  static async onMenuSelect(menuButton){
+    let currentMenu = 'menu-'+window.current_mode
+    MainWindow.addRemoveClass(currentMenu, 'remove', 'is-active')
+    MainWindow.addRemoveClass(menuButton.id, 'add', 'is-active')
+
+    window.last_mode = window.current_mode
+    window.current_mode = menuButton.id.replace('menu-','')
+
+    debug('Active Mode:', window.current_mode)
+
+    await window.rfparty.setMode(window.current_mode)
+  }
+
+  static async closeFullContent(evt){
+    await window.rfparty.closeFullContent(evt)
+  }
+
+
   static async onload(divId, channel) {
     debug('RFParty.onload')
+    feather.replace()
     window.rfparty = new RFParty(divId)
 
     const form = document.getElementsByName('setupForm')[0]
     form.addEventListener('submit', MainWindow.startSession);
 
     const versionText = document.getElementById('version-text')
+    const versionTextDrawer = document.getElementById('version-text-drawer')
     if(versionText){
       versionText.innerText = 'v' + RFParty.Version
+    }
+
+    if(versionTextDrawer){
+      versionTextDrawer.innerText = 'v' + RFParty.Version
     }
 
     window.channel = channel
@@ -727,15 +765,26 @@ export class MainWindow {
     MainWindow.setConnectionStatus(window.status_text, color || 'green')
   }
 
-  static async setupDisply(){
+  
 
-    const p = (fn)=>{
-      return ()=>{
-        return new Promise((resolve,reject)=>{
-          fn(resolve,reject)
-        })
-      }
+  static async toggleFullScreen(){
+    debug('toggle fullscreen')
+    if(window.fullscreen){
+      await (p(AndroidFullScreen.showSystemUI)())
+
+      MainWindow.hideDiv('minimize-menu-item')
+      MainWindow.showDiv('maximize-menu-item')
+    } else {
+      await (p(AndroidFullScreen.immersiveMode)())
+
+      MainWindow.showDiv('minimize-menu-item')
+      MainWindow.hideDiv('maximize-menu-item')
     }
+
+    window.fullscreen = !window.fullscreen
+  }
+
+  static async setupDisply(){
 
     let supported = await (p(AndroidFullScreen.isSupported)())
     supported == supported && await (p(AndroidFullScreen.isImmersiveModeSupported)())
@@ -748,6 +797,7 @@ export class MainWindow {
     //await (p(AndroidFullScreen.showUnderSystemUI)())
 
     await (p(AndroidFullScreen.immersiveMode)())
+    window.fullscreen = true
 
 
     let dimensionsImmersiveFinal = {
@@ -764,7 +814,7 @@ export class MainWindow {
 
     console.log('immersive dimensions final', dimensionsImmersiveFinal)
 
-
+    
   }
 
   static async setupSession(channel){
@@ -873,6 +923,9 @@ export class MainWindow {
         }, function() {
         debug('wakelock - Failed to set');
         })
+
+        //debug('allow shrink view')
+        //window.Keyboard.shrinkView(true)
     })
     
 

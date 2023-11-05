@@ -1,7 +1,5 @@
 'use strict'
 
-const Dataparty = require('@dataparty/api/src/index')
-
 const ISchema = require('@dataparty/api/src/service/ischema')
 
 const Utils = ISchema.Utils

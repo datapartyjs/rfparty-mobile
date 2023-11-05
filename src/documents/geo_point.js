@@ -1,6 +1,10 @@
 const debug=require('debug')('rfparty.geo_point')
 
-const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
+//const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
+
+require( '@dataparty/api/dist/dataparty-browser' )
+
+const Dataparty = window.Dataparty
 
 module.exports = class GeoPointDocument extends Dataparty.IDocument {
   constructor({ party, type, id, data }) {

@@ -1,8 +1,11 @@
 //import { point } from 'leaflet'
 //import { scan } from 'node-wifi'
 
-import { last } from 'lodash'
-
+import Drawer from '@vrembem/drawer';
+import { labelWidth } from 'settings-panel/theme/none';
+/*import '@vrembem/drawer/dist/styles.css';
+import '@vrembem/icon/dist/styles.css';
+import '@vrembem/menu/dist/styles.css';*/
 
 const debug = /*(...args)=>{ debug('rfparty', ...args) }*/  require('debug')('rfparty')
 const Leaflet = require('leaflet')
@@ -15,14 +18,19 @@ const moment = require('moment')
 const EventEmitter = require('last-eventemitter')
 const EarthDistance = require('earth-distance-js')
 
+
+
 const RFPartyDocuments = require('./documents')
 
 import * as UUID16_TABLES from './16bit-uuid-tables'
+import { MainWindow } from './main-window';
 import * as MANUFACTURER_TABLE from './manufacturer-company-id.json' 
 import { UUIDParser } from './parsers/uuid-parser'
 const DeviceIdentifiers = require('./device-identifiers')
 
 const JSONViewer = require('json-viewer-js/src/jsonViewer')
+const SettingsPanel = require('settings-panel')
+const SettingsTheme = require('settings-panel/theme/dragon')
 
 const TILE_SERVER_DEFAULT = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const TILE_SERVER_DARK = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
@@ -51,6 +59,7 @@ function toLoc(location){
     lon: location.longitude || 0
   }
 }
+
 
 
 /**
@@ -88,6 +97,8 @@ export class RFParty extends EventEmitter {
     super()
 
     this.party = party
+
+    this.mode = 'map'
 
     this.showAllTracks = true
     this.showAwayTracks = false
@@ -230,6 +241,13 @@ export class RFParty extends EventEmitter {
       }
     })
 
+    
+    this.drawers = new Drawer({
+      selectorInert: '.drawer-main',
+      selectorOverflow: 'body, .drawer-main'
+    });
+    
+    await this.drawers.init();
   }
 
   async handleSearch(input){
@@ -1017,5 +1035,139 @@ export class RFParty extends EventEmitter {
     }
 
     return names
+  }
+
+  static get SettingsPanel(){
+    return SettingsPanel
+  }
+
+
+
+  async setMode(mode){
+    this.last_mode = this.mode
+    this.mode = mode
+
+    await this.drawers.get('drawer').close()
+
+    if(this.mode == 'map'){
+      MainWindow.hideDiv('full-content')
+      window.SoftInputMode.set('adjustNothing')
+    }
+    else if(this.mode == 'settings'){
+      let fullContent = document.getElementById('full-content')
+      let fullContentTitle = document.getElementById('full-content-title')
+      window.SoftInputMode.set('adjustResize')
+
+
+      fullContentTitle.textContent = this.mode.charAt(0).toUpperCase() + this.mode.slice(1)
+
+      const settings_config = {
+        container: fullContent,
+        theme: SettingsTheme,
+        orientation: 'left',
+        collapsible: true,
+        collapsed: true,
+        fontFamily: 'Roboto Condensed',
+        labelWidth: '50%',
+        fontSize: '16px',
+        style:{
+          width: '100vw'
+        },
+        className: 'settings-panel--collapsed'
+      }
+
+      const cancelOrApply = 	[
+        {type: 'button', label: 'Cancel', style: {width: '50%'}},
+        {type: 'button', label: 'Apply', style: 'width: 50%'}
+      ]
+
+      let general_settings = new SettingsPanel([
+        {type: 'checkbox', label: 'Start on boot', value: false},
+        {type: 'checkbox', label: 'Start fullscreen', value: true},
+        {type: 'checkbox', label: 'Keep screen on', value: true},
+        {type: 'checkbox', label: 'Read Only', value: false},
+        {type: 'checkbox', label: 'Persistant Storage', value: true},
+        {type: 'checkbox', label: 'Delete Old Data', value: false},
+        {type: 'number', label: 'Max age (days)', min: 0, max: 365, value: 31},
+        {type: 'checkbox', label: 'Show Status Bar', value: true},
+        ...cancelOrApply
+      ],
+        {
+          title: 'General',
+          ...settings_config
+        }
+      )
+
+      let map_layers_settings = new SettingsPanel([
+        {type: 'checkbox', label: 'Draw Current Location', value: true},
+        {type: 'checkbox', label: 'Draw Location History', value: true},
+        {type: 'checkbox', label: 'Draw GPS Quality', value: true},
+        {type: 'select', label: 'Location Style', options: ['line', 'points', 'heatmap'], value: 'line'},
+        {type: 'color', label: 'Location Color', value: 'grey'},
+        {type: 'select', label: 'BLE Station Style', options: ['packets', 'range', 'quality', 'point', 'location', 'heatmap'], value: 'location'},
+        {type: 'color', label: 'BLE First Seen Color', value: 'white'},
+        {type: 'color', label: 'BLE Last Seen Color', value: 'yellow'},
+        {type: 'color', label: 'BLE Observations Color', value: 'green'},
+        {type: 'color', label: 'BLE Path Color', value: 'blue'},
+        ...cancelOrApply
+      ],
+        {
+          title: 'Map Layers',
+          ...settings_config
+        }
+      )
+
+      let bluetooth_settings = new SettingsPanel([
+        {type: 'checkbox', label: 'Active Scanning', value: true},
+        {type: 'number', label: 'Scan Interval (s)', min: 0, max: 600, value: 60},
+        ...cancelOrApply
+      ],
+        {
+          title: 'Bluetooth',
+          ...settings_config
+        }
+      )
+
+      let location_settings = new SettingsPanel([
+        {type: 'select', label: 'Location Provider', options: ['distance', 'activity', 'raw'], value: 'raw'},
+        {type: 'number', label: 'Interval (s)', min: 0, max: 300, value: 5},
+        {type: 'number', label: 'Fastest Interval (s)', min: 0, max: 300, value: 1},
+        {type: 'number', label: 'Activities Interval (s)', min: 0, max: 300, value: 5},
+        {type: 'number', label: 'Stationary Radius (m)', min: 0, max: 100, value: 5},
+        {type: 'number', label: 'Distance Filter (m)', min: 0, max: 100, value: 1},
+        ...cancelOrApply
+      ],
+        {
+          title: 'Location',
+          ...settings_config
+        }
+      )
+
+      MainWindow.showDiv('full-content')
+    }
+
+
+  }
+
+  closeFullContent(){
+    let fullContent = document.getElementById('full-content')
+    let fullContentTitle = document.getElementById('full-content-title')
+
+    MainWindow.hideDiv('full-content')
+    MainWindow.addRemoveClass('full-content', 'remove', 'settings-panel-container')
+
+    let children = fullContent.children
+    for(let idx=0; idx<children.length; idx++) {
+      let child = children[idx]
+      if(!child.id || child.id != 'full-content-header'){
+        child.remove()
+        idx--
+        //fullContent.removeChild(elem)
+        //delete elem
+      }
+    }
+
+    this.mode = this.last_mode
+    this.setMode(this.last_mode)
   }
 }

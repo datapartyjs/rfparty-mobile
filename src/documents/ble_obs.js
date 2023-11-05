@@ -1,7 +1,9 @@
 const debug=require('debug')('rfparty.ble_obs')
 
-const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
+//const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
+require( '@dataparty/api/dist/dataparty-browser' )
 
+const Dataparty = window.Dataparty
 
 module.exports = class BleObsDocument extends Dataparty.IDocument {
   constructor({ party, type, id, data }) {
