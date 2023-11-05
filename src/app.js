@@ -1,4 +1,4 @@
-const Dataparty = require( '@dataparty/api/dist/dataparty-browser' )
+const Dataparty = require( '@dataparty/api/src/index-browser' )
 window.Dataparty = Dataparty
 
 import {MainWindow} from './main-window'

@@ -1,7 +1,7 @@
 {
   "name": "xyz.dataparty.rfparty",
   "displayName": "rfparty",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "description": "A bluetooth tricorder",
   "source": "./index.html",
   "scripts": {
@@ -10,14 +10,14 @@
     "init": "node ./scripts/init.js",
     "prepare-nodejs": "cd www/nodejs-project && TARGET_ARCH=arm64 TARGET_PLATFORM=android npm install",
     "lint": "eslint --fix src/ || exit 0",
-    "package": "cordova run android --debug",
+    "package": "cordova build android --debug --dev; cp /home/alanm/rfparty-mobile/platforms/android/app/build/outputs/apk/debug/app-debug.apk rfparty-mobile.apk",
     "repackage": "cordova clean android; cordova run android --debug",
     "deploy": "cordova run android --debug",
     "clean-dataparty": "rm -rf node_modules/@dataparty/api; rm package-lock.json",
     "clean-nodejs": "cd www/nodejs-project && npm run clean",
     "build-nodejs": "cd www/nodejs-project && npm run build",
     "build-party": "./scripts/build-party.sh",
-    "build-dev": "npm run build-party; parcel build index.html --no-optimize --no-content-hash --public-url . --dist-dir ./www index.html",
+    "build-dev": "npm run build-party; parcel build index.html --no-scope-hoist --no-optimize --no-content-hash --public-url . --dist-dir ./www index.html",
     "build": "npm run build-party; npm run build-nodejs; parcel build --no-optimize --no-source-maps --no-content-hash --no-scope-hoist --public-url . --dist-dir ./www index.html"
   },
   "author": "Dataparty",
@@ -28,7 +28,7 @@
     "assert": "^2.0.0",
     "buffer": "^6.0.3",
     "cordova": "12.0.0",
-    "cordova-android": "^12.0.0",
+    "cordova-android": "^12.0.1",
     "cordova-background-geolocation-plugin": "^2.0.7",
     "cordova-plugin-android-permissions": "^1.1.3",
     "cordova-plugin-androidx": "^3.0.0",
@@ -50,6 +50,7 @@
     "cordova-plugin-softinputmode": "^1.0.3",
     "cordova-plugin-vibration": "^3.1.1",
     "cordova.plugins.diagnostic": "^7.1.0",
+    "crypto-browserify": "^3.12.0",
     "eslint": "8.19.0",
     "events": "^3.3.0",
     "parcel": "2.9.2",
@@ -70,7 +71,7 @@
     "util": "^0.12.5"
   },
   "dependencies": {
-    "@dataparty/api": "github:datapartyjs/dataparty-api#config-promise",
+    "@dataparty/api": "file:../code/dataparty-api",
     "@vrembem/base": "^3.0.10",
     "@vrembem/button": "^3.0.10",
     "@vrembem/core": "^3.0.10",
